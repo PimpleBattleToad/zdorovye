@@ -124,7 +124,7 @@ details p,details ul{font-size:13.5px;color:var(--muted)}
 </head>
 <body>
 <header class="top">
-  <div class="brand">Здоровье<span>план · дневник · 100 → 75</span></div>
+  <div class="brand">Здоровье<span id="subtitle">план · дневник</span></div>
   <div class="daynum" id="daynum"></div>
 </header>
 <main id="main"></main>
@@ -151,18 +151,40 @@ const fmtShort = k => parseKey(k).toLocaleDateString('ru-RU', { day: 'numeric', 
 const num = v => (v === '' || v === null || v === undefined || isNaN(+v)) ? null : +v;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+/* Личные данные в коде не хранятся: профиль вводится в приложении
+   (вкладка «План») и живёт только в localStorage этого браузера. */
 const DEFAULT = {
-  profile: { age: 47, height: 170, startWeight: 100, targetWeight: 75, startDate: todayKey() },
-  targets: { kcal: 1900, protein: 150, fat: 60, carbs: 190, water: 12, steps: 6000 },
+  profile: { age: 40, height: 175, startWeight: 90, targetWeight: 80, sex: 'm', startDate: todayKey(), confirmed: false },
+  targets: null,
   days: {},
   checkins: []
 };
+
+/* BMR по Mifflin-St Jeor, TDEE с коэффициентом 1,25, дефицит 17%,
+   белок 2,0 г на кг скорректированной массы, жиры 28% калорий, углеводы — остаток. */
+function calcTargets(p) {
+  const w = +p.startWeight || 90, h = +p.height || 175, a = +p.age || 40;
+  const male = (p.sex || 'm') === 'm';
+  const bmr = 10 * w + 6.25 * h - 5 * a + (male ? 5 : -161);
+  const tdee = bmr * 1.25;
+  const kcal = Math.round(tdee * 0.83 / 10) * 10;
+  const lean = Math.max(45, h - 97);
+  const protein = Math.round(lean * 2.0 / 5) * 5;
+  const fat = Math.round(kcal * 0.28 / 9);
+  const carbs = Math.max(60, Math.round((kcal - protein * 4 - fat * 9) / 4));
+  return { kcal, protein, fat, carbs, water: 12, steps: 6000, bmr: Math.round(bmr), tdee: Math.round(tdee), lean: Math.round(lean) };
+}
 
 let S;
 try { S = Object.assign(JSON.parse(JSON.stringify(DEFAULT)), JSON.parse(localStorage.getItem(KEY) || '{}')); }
 catch (e) { S = JSON.parse(JSON.stringify(DEFAULT)); }
 if (!S.days) S.days = {};
 if (!S.checkins) S.checkins = [];
+if (!S.profile || typeof S.profile !== 'object') S.profile = JSON.parse(JSON.stringify(DEFAULT.profile));
+if (!S.profile.sex) S.profile.sex = 'm';
+if (!S.profile.startDate) S.profile.startDate = todayKey();
+if (typeof S.profile.confirmed !== 'boolean') S.profile.confirmed = Object.keys(S.days).length > 0;
+S.targets = calcTargets(S.profile);
 
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } }
 function day(k) { k = k || todayKey(); if (!S.days[k]) S.days[k] = {}; return S.days[k]; }
@@ -279,6 +301,9 @@ function renderToday() {
   html += '<div class="card"><div class="between"><div><h2 style="margin:0">' + greet + '</h2><div class="muted small">День ' + dn + ' · неделя ' + Math.ceil(dn / 7) + '</div></div>' +
     '<div class="pill ' + (wk === 'rest' ? '' : 'green') + '">' + wkLabel + '</div></div></div>';
   html += painBanner;
+  if (!S.profile.confirmed) {
+    html += '<div class="alert amber"><b>Профиль не заполнен.</b> Возраст, рост, вес и цель — из них считаются калории, белок и прогноз. Пока стоят нейтральные значения.<br><button class="btn sm primary" data-act="goplan" style="margin-top:8px">Заполнить профиль</button></div>';
+  }
 
   /* quick records */
   html += '<div class="card"><h3>Быстрая запись</h3><div class="grid2">' +
@@ -550,15 +575,34 @@ function renderProgress() {
   html += '<div class="card"><h3>Если вес встал</h3><div class="list">' +
     '<div class="item"><div class="h">1. Проверь точность</div><div class="m">Порции, масло, пиво, выходные. 80% «плато» здесь.</div></div>' +
     '<div class="item"><div class="h">2. Добавь шаги</div><div class="m">+1000 в день — раньше, чем резать еду.</div></div>' +
-    '<div class="item"><div class="h">3. Потом минус 100–150 ккал</div><div class="m">Не больше. Ниже 1500 не опускаемся.</div></div>' +
+    '<div class="item"><div class="h">3. Потом минус 100–150 ккал</div><div class="m">Не больше. Ниже ' + ((S.profile.sex || 'm') === 'm' ? 1500 : 1200) + ' ккал не опускаемся.</div></div>' +
     '</div></div>';
   return html;
 }
 
+function profField(label, key, val, step) {
+  return '<div><label class="f">' + label + '</label><input type="number" inputmode="decimal" step="' + (step || 1) + '" data-profile="' + key + '" value="' + val + '"/></div>';
+}
+
 function renderPlan() {
+  const p = S.profile, t = S.targets;
+  const male = (p.sex || 'm') === 'm';
+  const curW = lastWeight() || p.startWeight;
   return '' +
-    '<div class="card"><h2 style="margin:0 0 6px">План</h2><div class="muted small">47 лет · 170 см · 100 кг → 75 кг. Темп 0,5–0,8 кг в неделю.</div>' +
-    '<div class="grid3" style="margin-top:12px"><div class="stat"><b>1900</b><span>ккал</span></div><div class="stat"><b>150</b><span>белок, г</span></div><div class="stat"><b>60 / 190</b><span>жиры / углеводы</span></div></div></div>' +
+    '<div class="card"><div class="between"><h2 style="margin:0">План</h2><span class="pill' + (p.confirmed ? ' green' : ' amber') + '">' + (p.confirmed ? 'профиль заполнен' : 'заполни профиль') + '</span></div>' +
+    '<div class="muted small" style="margin:6px 0 12px">Эти данные хранятся только в твоём браузере. Из них считаются калории, белок и прогноз. Темп 0,5–0,8 кг в неделю.</div>' +
+    '<div class="grid2">' +
+      profField('Возраст, лет', 'age', p.age) +
+      profField('Рост, см', 'height', p.height) +
+      profField('Стартовый вес, кг', 'startWeight', p.startWeight, 0.1) +
+      profField('Цель, кг', 'targetWeight', p.targetWeight, 0.1) +
+    '</div>' +
+    '<div class="grid2" style="margin-top:10px">' +
+      '<div><label class="f">Пол</label><div class="seg"><button data-act="sex" data-sex="m" class="' + (male ? 'on' : '') + '">мужской</button><button data-act="sex" data-sex="f" class="' + (!male ? 'on' : '') + '">женский</button></div></div>' +
+      '<div><label class="f">Дата старта</label><input type="date" data-profile="startDate" value="' + p.startDate + '"/></div>' +
+    '</div>' +
+    '<div class="grid3" style="margin-top:12px"><div class="stat"><b>' + t.kcal + '</b><span>ккал</span></div><div class="stat"><b>' + t.protein + '</b><span>белок, г</span></div><div class="stat"><b>' + t.fat + ' / ' + t.carbs + '</b><span>жиры / углеводы</span></div></div>' +
+    '<div class="tiny dim" style="margin-top:10px">BMR (Миффлин–Сан Жеор) = 10×' + p.startWeight + ' + 6,25×' + p.height + ' − 5×' + p.age + (male ? ' + 5' : ' − 161') + ' = ' + t.bmr + ' ккал.<br>TDEE = BMR × 1,25 = ' + t.tdee + ' ккал. Дефицит 17% → ' + t.kcal + ' ккал.<br>Белок 2,0 г × ' + t.lean + ' кг (скорректированная масса) = ' + t.protein + ' г. Жиры 28% калорий, углеводы — остаток.<br>Сейчас: ' + curW + ' кг, ИМТ ' + String(bmi(curW)).replace('.', ',') + ', до цели ' + (curW - p.targetWeight).toFixed(1).replace('.', ',') + ' кг.</div></div>' +
 
     '<div class="card"><h3>Правила, которые не обсуждаются</h3><div class="list">' +
     '<div class="item"><div class="h">Колени</div><div class="m">Нет бега, прыжков, плиометрики, глубоких приседаний, выпадов, бёрпи, скакалки, степ-аэробики, контактного спорта.</div></div>' +
@@ -583,7 +627,7 @@ function renderPlan() {
     '<li>Шаги: 6–8 тыс. — цель к 8-й неделе.</li></ul></div>' +
 
     '<div class="card"><h3>Сон</h3><div class="small muted">5–7 часов кормят вечерний шоколад. Цель на 4 недели: 7 часов, отбой в 23:00. Будильник «отбой» в 22:30.</div>' +
-    '<div class="alert amber" style="margin-bottom:0"><b>Храп + сонливость днём + 100 кг</b> — стоит исключить апноэ сна (пульсоксиметрия ночью или сомнолог). Если подтвердится — лечение даст больше, чем диета.</div></div>' +
+    '<div class="alert amber" style="margin-bottom:0"><b>Храп + сонливость днём</b> — стоит исключить апноэ сна (пульсоксиметрия ночью или сомнолог). Если подтвердится — лечение даст больше, чем диета.</div></div>' +
 
     '<div class="card"><h3>Анализы для разговора с терапевтом</h3><div class="small muted">Глюкоза, HbA1c, липидный профиль, АЛТ/АСТ, креатинин, ТТГ, мочевая кислота, витамин D, ферритин. Один раз сдать — и знаем, где стоим.</div></div>' +
 
@@ -613,7 +657,7 @@ function renderPlan() {
 
     '<div class="card"><h3>Вода и клетчатка</h3><div class="small muted">Вода 2,5–3 л (12 стаканов) — сытость и колени (отёк меньше при нормальном питье). Клетчатка 25–30 г: овощи 400–500 г в день, крупы, бобовые, яблоко. Без клетчатки дефицит переносится тяжело.</div></div>' +
 
-    '<div class="card"><h3>Когда дойдём до 75</h3><div class="small muted">Не «отпуск от плана». Калории поднимаем на 200–300 в неделю до поддержки (~2500), белок оставляем 150 г, силовые — 2–3 в неделю. Цель после — не цифра, а ходить легко и без боли.</div></div>';
+    '<div class="card"><h3>Когда дойдём до ' + S.profile.targetWeight + '</h3><div class="small muted">Не «отпуск от плана». Калории поднимаем на 200–300 в неделю, пока вес не встанет — это и есть твоя поддержка, её меряем, а не угадываем. Белок оставляем ' + S.targets.protein + ' г, силовые — 2–3 в неделю. Цель после — не цифра, а ходить легко и без боли.</div></div>';
 }
 
 const VIEWS = { today: renderToday, workout: renderWorkout, food: renderFood, diary: renderDiary, progress: renderProgress, plan: renderPlan };
@@ -624,6 +668,11 @@ function render() {
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
   const dn = dayNumber();
   document.getElementById('daynum').textContent = dn > 0 ? 'день ' + dn : '';
+  const sub = document.getElementById('subtitle');
+  if (sub) {
+    const p = S.profile;
+    sub.textContent = p.confirmed ? ('план · дневник · ' + p.startWeight + ' → ' + p.targetWeight) : 'план · дневник';
+  }
   if (tab === 'progress') requestAnimationFrame(drawCharts);
 }
 
@@ -837,7 +886,8 @@ function mergeBackup(j) {
     });
   }
   if (j.profile) Object.assign(S.profile, j.profile);
-  if (j.targets) Object.assign(S.targets, j.targets);
+  if (!S.profile.sex) S.profile.sex = 'm';
+  S.targets = calcTargets(S.profile);
   save();
   return { days: days, fields: fields };
 }
@@ -894,6 +944,18 @@ document.addEventListener('click', function (e) {
     window.scrollTo({ top: 0 });
     render();
     return;
+  }
+  if (act === 'goplan') {
+    tab = 'plan';
+    window.scrollTo({ top: 0 });
+    render();
+    return;
+  }
+  if (act === 'sex') {
+    S.profile.sex = el.dataset.sex === 'f' ? 'f' : 'm';
+    S.profile.confirmed = true;
+    S.targets = calcTargets(S.profile);
+    save(); render(); return;
   }
   if (act === 'cup') {
     const i = +el.dataset.i; const d = day(); const cur = d.water || 0;
@@ -960,6 +1022,8 @@ document.addEventListener('click', function (e) {
     if (confirm('Удалить все записи? Отменить будет нельзя.')) {
       localStorage.removeItem(KEY);
       S = JSON.parse(JSON.stringify(DEFAULT));
+      S.profile.startDate = todayKey();
+      S.targets = calcTargets(S.profile);
       save(); render();
     }
     return;
@@ -968,6 +1032,22 @@ document.addEventListener('click', function (e) {
 });
 
 /* input handling */
+document.addEventListener('change', function (e) {
+  const el = e.target.closest('[data-profile]');
+  if (!el) return;
+  const f = el.dataset.profile;
+  if (f === 'startDate') {
+    if (!el.value) { render(); return; }
+    S.profile.startDate = el.value;
+  } else {
+    const v = num(el.value);
+    if (v == null || v <= 0) { render(); return; }
+    S.profile[f] = v;
+  }
+  S.profile.confirmed = true;
+  S.targets = calcTargets(S.profile);
+  save(); render();
+});
 document.addEventListener('change', function (e) {
   const el = e.target.closest('[data-model]');
   if (!el) return;
