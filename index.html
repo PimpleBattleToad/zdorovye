@@ -117,6 +117,13 @@ details{background:var(--card2);border:1px solid var(--line);border-radius:12px;
 summary{cursor:pointer;font-size:14px;font-weight:600;color:var(--text)}
 details p,details ul{font-size:13.5px;color:var(--muted)}
 .timer{font:700 34px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:1px}
+.toast{position:fixed;left:12px;right:12px;top:10px;z-index:60;background:var(--card2);border:1px solid #1b5e4a;border-radius:14px;padding:12px 14px;font-size:13.5px;box-shadow:0 12px 30px rgba(0,0,0,.5);transform:translateY(-180%);transition:transform .25s ease;cursor:pointer}
+.toast.on{transform:translateY(0)}
+.toast b{display:block;margin-bottom:3px;color:var(--green)}
+.remrow{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:8px;font-size:13px;color:var(--muted)}
+.remrow span{white-space:nowrap}
+.remrow input[type=time],.remrow input[type=number]{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:7px 8px;font:inherit;font-size:13px;width:98px}
+.remrow input[type=number]{width:66px;text-align:center}
 @media(min-width:720px){
   .tabs{max-width:760px;margin:0 auto;border-radius:16px 16px 0 0;border-left:1px solid var(--line);border-right:1px solid var(--line)}
 }
@@ -167,7 +174,8 @@ const DEFAULT = {
   targets: null,
   days: {},
   checkins: [],
-  shop: { week: '', items: {} }
+  shop: { week: '', items: {} },
+  rem: { on: false, water: true, brk: true, train: true, warm: true, from: '9:00', to: '17:30', every: 90, brkEvery: 60, trainAt: '18:30', satAt: '11:00', last: {} }
 };
 
 /* BMR по Mifflin-St Jeor, TDEE с коэффициентом 1,25, дефицит 17%,
@@ -191,6 +199,14 @@ catch (e) { S = JSON.parse(JSON.stringify(DEFAULT)); }
 if (!S.days) S.days = {};
 if (!S.checkins) S.checkins = [];
 if (!S.shop || typeof S.shop !== 'object' || !S.shop.items) S.shop = { week: '', items: {} };
+if (!S.rem || typeof S.rem !== 'object') S.rem = JSON.parse(JSON.stringify(DEFAULT.rem));
+else {
+  const rd = DEFAULT.rem;
+  Object.keys(rd).forEach(k => { if (S.rem[k] === undefined) S.rem[k] = rd[k]; });
+  if (typeof S.rem.last !== 'object' || !S.rem.last) S.rem.last = {};
+  ['from', 'to', 'trainAt', 'satAt'].forEach(function (k) { S.rem[k] = hm(S.rem[k]); });
+  ['every', 'brkEvery'].forEach(function (k) { S.rem[k] = Math.max(15, Math.round(+S.rem[k] || DEFAULT.rem[k])); });
+}
 if (!S.profile || typeof S.profile !== 'object') S.profile = JSON.parse(JSON.stringify(DEFAULT.profile));
 if (!S.profile.sex) S.profile.sex = 'm';
 if (!S.profile.startDate) S.profile.startDate = todayKey();
@@ -803,6 +819,8 @@ function renderPlan() {
     '<div class="grid3" style="margin-top:12px"><div class="stat"><b>' + t.kcal + '</b><span>ккал</span></div><div class="stat"><b>' + t.protein + '</b><span>белок, г</span></div><div class="stat"><b>' + t.fat + ' / ' + t.carbs + '</b><span>жиры / углеводы</span></div></div>' +
     '<div class="tiny dim" style="margin-top:10px">BMR (Миффлин–Сан Жеор) = 10×' + p.startWeight + ' + 6,25×' + p.height + ' − 5×' + p.age + (male ? ' + 5' : ' − 161') + ' = ' + t.bmr + ' ккал.<br>TDEE = BMR × 1,25 = ' + t.tdee + ' ккал. Дефицит 17% → ' + t.kcal + ' ккал.<br>Белок 2,0 г × ' + t.lean + ' кг (скорректированная масса) = ' + t.protein + ' г. Жиры 28% калорий, углеводы — остаток.<br>Сейчас: ' + curW + ' кг, ИМТ ' + String(bmi(curW)).replace('.', ',') + ', до цели ' + (curW - p.targetWeight).toFixed(1).replace('.', ',') + ' кг.</div></div>' +
 
+    renderRemCard() +
+
     '<div class="card"><h3>Правила, которые не обсуждаются</h3><div class="list">' +
     '<div class="item"><div class="h">Колени</div><div class="m">Нет бега, прыжков, плиометрики, глубоких приседаний, выпадов, бёрпи, скакалки, степ-аэробики, контактного спорта.</div></div>' +
     '<div class="item"><div class="h">Разрешено</div><div class="m">Плавание, эллипс, велотренажёр с высоким седлом, ходьба по ровному, гребной, силовые сидя/лёжа, верх тела, core лёжа.</div></div>' +
@@ -1132,6 +1150,199 @@ async function pullData(manual) {
   }
 }
 
+/* ============ НАПОМИНАЛКИ ============ */
+function remMin(s) {
+  const p = String(s || '').split(':');
+  const h = num(p[0]), m = num(p[1]);
+  return (h == null ? 0 : h) * 60 + (m == null ? 0 : m);
+}
+/* приводит время к виду HH:MM, иначе <input type="time"> показывает пустоту */
+function hm(v) {
+  const m = /^\s*(\d{1,2}):(\d{1,2})\s*$/.exec(String(v == null ? '' : v));
+  if (!m) return '09:00';
+  const h = Math.min(23, +m[1]), mi = Math.min(59, +m[2]);
+  return pad(h) + ':' + pad(mi);
+}
+function nowMin() { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
+
+function showToast(title, body) {
+  let t = document.getElementById('toast');
+  if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; document.body.appendChild(t); }
+  t.innerHTML = '<b>' + esc(title) + '</b>' + esc(body);
+  t.classList.add('on');
+  clearTimeout(showToast.h);
+  showToast.h = setTimeout(function () { t.classList.remove('on'); }, 9000);
+  t.onclick = function () { t.classList.remove('on'); };
+}
+/* системное уведомление, если приложение в фоне и разрешение есть; иначе всплывашка */
+function notify(title, body) {
+  try {
+    if ('Notification' in window && Notification.permission === 'granted' && document.visibilityState !== 'visible') {
+      new Notification(title, { body: body, icon: 'icon-192.png', tag: title + body });
+      return true;
+    }
+  } catch (e) { }
+  showToast(title, body);
+  return false;
+}
+
+function remTick() {
+  const R = S.rem;
+  if (!R || !R.on) return;
+  const now = new Date(), dow = now.getDay(), m = nowMin(), tk = todayKey();
+  const L = R.last;
+  const due = function (v, ms) { return typeof v !== 'number' || now - v >= ms; };
+  let changed = false;
+
+  if (m >= remMin(R.from) && m <= remMin(R.to)) {
+    if (R.water && due(L.water, (+R.every || 90) * 60000)) {
+      const cups = day().water || 0;
+      notify('Вода', 'Стакан воды. Сегодня ' + cups + ' из ' + S.targets.water + '.');
+      L.water = +now; changed = true;
+    }
+    if (R.brk && due(L.brk, (+R.brkEvery || 60) * 60000)) {
+      notify('Встать и пройтись', '2 минуты ходьбы по офису, плечи назад, глаза с монитора.');
+      L.brk = +now; changed = true;
+    }
+  }
+
+  const what = SCHEDULE[dow];
+  if (R.train && what && what !== 'rest') {
+    const at = dow === 6 ? remMin(R.satAt) : remMin(R.trainAt);
+    const k1 = 'train:' + tk;
+    if (m >= at && m <= at + 30 && L[k1] !== tk) {
+      notify('Сегодня ' + SCHED_LABEL[what], '20–30 минут. Разминка 8–10 минут обязательна, колени — по шкале боли.');
+      L[k1] = tk; changed = true;
+    }
+    const k2 = 'warm:' + tk;
+    if (R.warm && m >= at - 10 && m < at && L[k2] !== tk) {
+      notify('Разминка', '10 минут суставной гимнастики: шея, плечи, локти, таз, колени сидя, голеностопы.');
+      L[k2] = tk; changed = true;
+    }
+  }
+  if (changed) save();
+}
+
+/* ---- календарь .ics: напоминания, которые работают при закрытом приложении ---- */
+function icsStamp(d) {
+  const p = n => String(n).padStart(2, '0');
+  return d.getUTCFullYear() + p(d.getUTCMonth() + 1) + p(d.getUTCDate()) + 'T' + p(d.getUTCHours()) + p(d.getUTCMinutes()) + p(d.getUTCSeconds()) + 'Z';
+}
+function icsEsc(s) {
+  return String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+}
+function icsFold(line) {
+  let out = '', s = String(line);
+  while (s.length > 73) { out += s.slice(0, 73) + '\r\n '; s = s.slice(73); }
+  return out + s;
+}
+function buildICS() {
+  const R = S.rem;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const stamp = icsStamp(now);
+  const d8 = d => d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
+  const nextDow = target => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + ((target - now.getDay() + 7) % 7));
+    return d;
+  };
+  const lines = [];
+  const push = s => lines.push(icsFold(s));
+
+  push('BEGIN:VCALENDAR');
+  push('VERSION:2.0');
+  push('PRODID:-//zdorovye//napominalki//RU');
+  push('CALSCALE:GREGORIAN');
+  push('METHOD:PUBLISH');
+  push('X-WR-CALNAME:Здоровье: вода и тренировки');
+
+  /* вода и перерыв: каждый час в рабочие дни */
+  const mon = nextDow(1);
+  push('BEGIN:VEVENT');
+  push('UID:water-walk@zdorovye');
+  push('DTSTAMP:' + stamp);
+  push('DTSTART:' + d8(mon) + 'T090000');
+  push('DTEND:' + d8(mon) + 'T090500');
+  push('RRULE:FREQ=DAILY;BYHOUR=9,10,11,12,13,14,15,16,17;BYDAY=MO,TU,WE,TH,FR');
+  push('SUMMARY:Вода + 2 минуты ходьбы');
+  push('DESCRIPTION:' + icsEsc('Стакан воды и короткая прогулка по офису. Плечи назад, глаза с монитора.'));
+  push('BEGIN:VALARM');
+  push('TRIGGER:PT0M');
+  push('ACTION:DISPLAY');
+  push('DESCRIPTION:Вода и разминка');
+  push('END:VALARM');
+  push('END:VEVENT');
+
+  /* тренировки по расписанию */
+  const plan = [[1, 'A'], [2, 'cardio'], [3, 'B'], [5, 'cardio'], [6, 'mobility']];
+  plan.forEach(function (p) {
+    const dow = p[0], what = p[1];
+    const atStr = dow === 6 ? R.satAt : R.trainAt;
+    const at = remMin(atStr);
+    const d = nextDow(dow);
+    d.setHours(Math.floor(at / 60), at % 60, 0, 0);
+    const end = new Date(d.getTime() + 45 * 60000);
+    push('BEGIN:VEVENT');
+    push('UID:train-' + dow + '@zdorovye');
+    push('DTSTAMP:' + stamp);
+    push('DTSTART:' + d8(d) + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + '00');
+    push('DTEND:' + d8(end) + 'T' + pad(end.getHours()) + pad(end.getMinutes()) + '00');
+    push('RRULE:FREQ=WEEKLY;BYDAY=' + ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'][dow]);
+    push('SUMMARY:' + icsEsc(SCHED_LABEL[what]));
+    push('DESCRIPTION:' + icsEsc('Разминка 8–10 минут обязательна. Колени — по шкале боли: 0–3 работаем, 4–5 снижаем, 6+ стоп.'));
+    push('BEGIN:VALARM');
+    push('TRIGGER:-PT10M');
+    push('ACTION:DISPLAY');
+    push('DESCRIPTION:Разминка и тренировка');
+    push('END:VALARM');
+    push('END:VEVENT');
+  });
+
+  push('END:VCALENDAR');
+  return lines.join('\r\n') + '\r\n';
+}
+function downloadICS() {
+  const blob = new Blob([buildICS()], { type: 'text/calendar;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'zdorovye-napominalki.ics';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  alert('Файл календаря сохранён.\n\nОткрой его на телефоне — календарь предложит добавить 6 повторяющихся событий. Дальше напоминания работают без интернета и при закрытом приложении.');
+}
+
+function remToggleRow(k, title, sub) {
+  const on = !!S.rem[k];
+  return '<div class="check' + (on ? ' on' : '') + '" data-act="remtoggle" data-k="' + k + '"><div class="box">' + (on ? '✓' : '') + '</div>' +
+    '<div><div class="t">' + title + '</div><div class="s">' + sub + '</div></div></div>';
+}
+function renderRemCard() {
+  const R = S.rem;
+  const perm = ('Notification' in window) ? Notification.permission : 'нет';
+  let html = '<div class="card"><div class="between"><h3 style="margin:0">Напоминалки</h3>' +
+    '<span class="pill' + (R.on ? ' green' : '') + '">' + (R.on ? 'включены' : 'выключены') + '</span></div>' +
+    '<div class="tiny dim" style="margin-top:6px">Пока приложение открыто — подсказка приходит всплывашкой, а в фоне — системным уведомлением. Чтобы напоминания шли при закрытом приложении, скачай календарь: телефон будет звонить сам, без интернета.</div>' +
+    '<div class="checks" style="margin-top:12px">' +
+    remToggleRow('water', 'Вода', 'в рабочее время, каждые ' + R.every + ' мин') +
+    remToggleRow('brk', 'Перерыв и ходьба', 'каждые ' + R.brkEvery + ' мин, 2 минуты пройтись') +
+    remToggleRow('train', 'Тренировка по плану', 'будни в ' + R.trainAt + ', суббота в ' + R.satAt) +
+    remToggleRow('warm', 'Разминка', 'за 10 минут до тренировки') +
+    '</div>' +
+    '<div class="remrow"><span>Вода с</span><input type="time" data-rem="from" value="' + R.from + '"/><span>до</span><input type="time" data-rem="to" value="' + R.to + '"/></div>' +
+    '<div class="remrow"><span>Вода каждые</span><input type="number" min="30" max="240" step="15" data-rem="every" value="' + R.every + '"/><span>минут</span></div>' +
+    '<div class="remrow"><span>Перерыв каждые</span><input type="number" min="30" max="180" step="15" data-rem="brkEvery" value="' + R.brkEvery + '"/><span>минут</span></div>' +
+    '<div class="remrow"><span>Тренировка в</span><input type="time" data-rem="trainAt" value="' + R.trainAt + '"/><span>суббота в</span><input type="time" data-rem="satAt" value="' + R.satAt + '"/></div>' +
+    '<div class="row" style="margin-top:12px">' +
+    (R.on ? '<button class="btn sm ghost" data-act="remoff">Выключить</button>'
+      : '<button class="btn sm primary" data-act="remon">Включить</button>') +
+    '<button class="btn sm" data-act="remtest">Проверить</button></div>' +
+    '<button class="btn sm ghost" style="width:100%;margin-top:8px" data-act="remics">Скачать календарь (.ics)</button>' +
+    '<div class="tiny dim" style="margin-top:8px">Разрешение браузера: ' + (perm === 'granted' ? 'выдано' : perm === 'denied' ? 'запрещено — включи в настройках сайта' : 'не запрошено') + '. Напоминания не лезут ночью: окно с ' + R.from + ' до ' + R.to + '.</div></div>';
+  return html;
+}
+
 /* ============ ACTIONS ============ */
 document.addEventListener('click', function (e) {
   const el = e.target.closest('[data-act]');
@@ -1247,6 +1458,29 @@ document.addEventListener('click', function (e) {
     return;
   }
   if (act === 'timer') { toggleTimer(); return; }
+  if (act === 'remtoggle') {
+    const k = el.dataset.k;
+    S.rem[k] = !S.rem[k];
+    save(); render();
+    return;
+  }
+  if (act === 'remon') {
+    S.rem.on = true;
+    save(); render();
+    if ('Notification' in window && Notification.permission === 'default' && typeof Notification.requestPermission === 'function') {
+      Notification.requestPermission().then(function () { render(); }, function () { render(); });
+    }
+    setTimeout(function () {
+      notify('Напоминалки включены', 'Проверка связи. Дальше — вода, перерывы, разминка и тренировка по времени.');
+    }, 500);
+    return;
+  }
+  if (act === 'remoff') { S.rem.on = false; save(); render(); return; }
+  if (act === 'remtest') {
+    notify('Проверка напоминания', 'Так это и выглядит. Если приложение свёрнуто — придёт системное уведомление.');
+    return;
+  }
+  if (act === 'remics') { downloadICS(); return; }
 });
 
 /* input handling */
@@ -1264,6 +1498,21 @@ document.addEventListener('change', function (e) {
   }
   S.profile.confirmed = true;
   S.targets = calcTargets(S.profile);
+  save(); render();
+});
+document.addEventListener('change', function (e) {
+  const el = e.target.closest('[data-rem]');
+  if (!el) return;
+  const f = el.dataset.rem;
+  if (f === 'from' || f === 'to' || f === 'trainAt' || f === 'satAt') {
+    if (!/^\d{1,2}:\d{2}$/.test(el.value)) { render(); return; }
+    S.rem[f] = el.value;
+  } else {
+    const v = num(el.value);
+    if (v == null || v < 15) { render(); return; }
+    S.rem[f] = Math.round(v);
+  }
+  S.rem.last = {};
   save(); render();
 });
 document.addEventListener('change', function (e) {
@@ -1429,6 +1678,11 @@ function drawPainChart() {
 /* ============ INIT ============ */
 render();
 window.addEventListener('resize', function () { if (tab === 'progress') drawCharts(); });
+
+/* напоминалки: проверяем раз в минуту, пока приложение открыто */
+setInterval(remTick, 60000);
+setTimeout(remTick, 4000);
+document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') remTick(); });
 
 /* тихо подтягиваем data.json, если приложение открыто по http(s) */
 if (/^https?:$/.test(location.protocol)) {
