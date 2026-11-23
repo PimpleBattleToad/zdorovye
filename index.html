@@ -147,6 +147,15 @@ const dkey = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.ge
 const todayKey = () => dkey(new Date());
 const parseKey = k => { const p = k.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); };
 const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+/* номер недели (ISO-подобный): по нему обнуляется список покупок */
+const weekKey = () => {
+  const d = new Date();
+  const t = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  t.setDate(t.getDate() + 4 - (t.getDay() || 7));
+  const y0 = new Date(t.getFullYear(), 0, 1);
+  const w = Math.ceil(((t - y0) / 86400000 + 1) / 7);
+  return t.getFullYear() + '-W' + pad(w);
+};
 const fmtShort = k => parseKey(k).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
 const num = v => (v === '' || v === null || v === undefined || isNaN(+v)) ? null : +v;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -157,7 +166,8 @@ const DEFAULT = {
   profile: { age: 40, height: 175, startWeight: 90, targetWeight: 80, sex: 'm', startDate: todayKey(), confirmed: false },
   targets: null,
   days: {},
-  checkins: []
+  checkins: [],
+  shop: { week: '', items: {} }
 };
 
 /* BMR по Mifflin-St Jeor, TDEE с коэффициентом 1,25, дефицит 17%,
@@ -180,6 +190,7 @@ try { S = Object.assign(JSON.parse(JSON.stringify(DEFAULT)), JSON.parse(localSto
 catch (e) { S = JSON.parse(JSON.stringify(DEFAULT)); }
 if (!S.days) S.days = {};
 if (!S.checkins) S.checkins = [];
+if (!S.shop || typeof S.shop !== 'object' || !S.shop.items) S.shop = { week: '', items: {} };
 if (!S.profile || typeof S.profile !== 'object') S.profile = JSON.parse(JSON.stringify(DEFAULT.profile));
 if (!S.profile.sex) S.profile.sex = 'm';
 if (!S.profile.startDate) S.profile.startDate = todayKey();
@@ -275,6 +286,81 @@ const QUICK = [
   ['Пиво 0,5 л', 215, 2], ['Пельмени 250 г', 330, 25]
 ];
 const STOP_RULE = 'Остановись немедленно и обратись к врачу, если: боль острая, стреляющая; отек/покраснение/жара в суставе; колено щёлкает с болью; хромота; боль не проходит за 48 ч покоя; боль в покое/ночью.';
+
+/* Список покупок на неделю: под 5 рабочих обедов из ланч-боксов плюс завтраки,
+   ужины и офисный ящик. Количества — на одного человека. */
+const SHOP = [
+  {
+    name: 'Мясо, рыба, яйца',
+    items: [
+      ['Курица, бёдра', '1,2 кг'],
+      ['Индейка, бедро или филе', '1 кг'],
+      ['Говядина или косуля', '600 г'],
+      ['Рыба: горбуша, минтай, треска', '800 г'],
+      ['Яйца', '20 шт'],
+      ['Тунец в саше', '2 шт']
+    ]
+  },
+  {
+    name: 'Молочное',
+    items: [
+      ['Творог 5%', '1,4 кг'],
+      ['Сметана 10%', '300 г'],
+      ['Сыр', '200 г'],
+      ['Масло сливочное', '180 г']
+    ]
+  },
+  {
+    name: 'Крупы, макароны, хлеб',
+    items: [
+      ['Гречка', '700 г'],
+      ['Рис', '700 г'],
+      ['Макароны из твёрдых сортов', '500 г'],
+      ['Булгур или кускус', '300 г'],
+      ['Чечевица или фасоль', '400 г'],
+      ['Хлеб цельнозерновой', '1 буханка'],
+      ['Хлебцы', '1 упаковка']
+    ]
+  },
+  {
+    name: 'Овощи и фрукты',
+    items: [
+      ['Картофель', '1,5 кг'],
+      ['Капуста белокочанная', '1 кг'],
+      ['Морковь', '700 г'],
+      ['Лук', '500 г'],
+      ['Свёкла', '500 г'],
+      ['Огурцы', '600 г'],
+      ['Помидоры', '600 г'],
+      ['Перец болгарский', '400 г'],
+      ['Кабачок', '2 шт'],
+      ['Салат листовой', '1 упаковка'],
+      ['Квашеная капуста', '500 г'],
+      ['Яблоки', '1 кг'],
+      ['Бананы', '6 шт'],
+      ['Лимон', '1 шт']
+    ]
+  },
+  {
+    name: 'Бакалея и мелочи',
+    items: [
+      ['Орехи', '200 г'],
+      ['Протеиновые батончики', '3 шт'],
+      ['Шоколад 70%', '100 г'],
+      ['Томатный соус без сахара', '1 банка'],
+      ['Специи: паприка, карри, травы, имбирь', 'проверить дома'],
+      ['Горчица, соевый соус, аджика', 'проверить дома']
+    ]
+  },
+  {
+    name: 'Заморозка про запас',
+    items: [
+      ['Котлеты или фрикадельки', '1 упаковка'],
+      ['Овощная смесь', '1 упаковка']
+    ]
+  }
+];
+const SHOP_TOTAL = SHOP.reduce((n, g) => n + g.items.length, 0);
 
 /* ============ UI STATE ============ */
 let tab = 'today';
@@ -415,6 +501,63 @@ function workoutBlock(id, title, ex, st, wk) {
   return html;
 }
 
+function shopChecked() {
+  if (S.shop.week !== weekKey()) return {};
+  return S.shop.items || {};
+}
+function shopText() {
+  const done = shopChecked();
+  let out = 'Список покупок · неделя ' + weekKey() + '\n';
+  SHOP.forEach((g, gi) => {
+    out += '\n' + g.name.toUpperCase() + '\n';
+    g.items.forEach((it, ii) => {
+      out += (done[gi + '-' + ii] ? '[x] ' : '[ ] ') + it[0] + ' — ' + it[1] + '\n';
+    });
+  });
+  return out.trim();
+}
+function shopCopyFallback(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) { }
+  document.body.removeChild(ta);
+  if (ok) { done(); return; }
+  /* копирование запрещено (нет https или нет жеста) — показываем текст, его можно выделить */
+  const box = document.getElementById('shoptext');
+  if (box) {
+    box.value = text;
+    box.hidden = false;
+    box.focus();
+    box.select();
+    box.scrollIntoView({ block: 'center' });
+  } else { alert(text); }
+}
+function shopCard() {
+  const done = shopChecked();
+  const n = Object.keys(done).filter(k => done[k]).length;
+  let html = '<div class="card"><div class="between"><h3 style="margin:0">Список покупок на неделю</h3>' +
+    '<span class="pill' + (n === SHOP_TOTAL ? ' green' : '') + '">' + n + ' / ' + SHOP_TOTAL + '</span></div>' +
+    '<div class="tiny dim" style="margin-top:6px">На одного человека: 5 рабочих обедов, завтраки, ужины и офисный ящик. Половина обычно уже есть дома — сначала пройдись по своим полкам, потом в магазин.</div>';
+  SHOP.forEach((g, gi) => {
+    html += '<div class="tiny dim" style="margin:16px 0 6px;text-transform:uppercase;letter-spacing:.5px">' + g.name + '</div><div class="checks">';
+    g.items.forEach((it, ii) => {
+      const on = !!done[gi + '-' + ii];
+      html += '<div class="check' + (on ? ' on' : '') + '" data-act="shop" data-id="' + gi + '-' + ii + '"><div class="box">' + (on ? '✓' : '') + '</div>' +
+        '<div class="t">' + it[0] + ' <span class="dim" style="font-size:12px;white-space:nowrap">· ' + it[1] + '</span></div></div>';
+    });
+    html += '</div>';
+  });
+  html += '<div class="row" style="margin-top:14px"><button class="btn sm" data-act="shopcopy">Скопировать</button>' +
+    '<button class="btn sm ghost" data-act="shopclear">Снять галочки</button></div>' +
+    '<textarea id="shoptext" readonly hidden style="width:100%;height:200px;margin-top:10px;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:12.5px;line-height:1.5"></textarea>' +
+    '<div class="tiny dim" style="margin-top:8px">Отмечай прямо в магазине. В понедельник список обнулится сам.</div></div>';
+  return html;
+}
+
 function renderFood() {
   const d = day();
   const T = S.targets;
@@ -486,6 +629,8 @@ function renderFood() {
     '<div class="item"><div class="h">Чт · 560 ккал · Б 43</div><div class="m">Курица + макароны + перец с морковью + томатный соус</div></div>' +
     '<div class="item"><div class="h">Пт · 545 ккал · Б 41</div><div class="m">Индейка с рисом и морковью + свёкла с чесноком</div></div>' +
     '</div><div class="tiny dim" style="margin-top:8px">Ориентир на неделю: рыба 2 раза, птица 2–3, красное мясо 1–2, бобовые 1. Один и тот же белок два дня подряд не ставим — приедается.</div></div>';
+
+  html += shopCard();
 
   html += '<div class="card"><h3>Заготовка в воскресенье: 75 минут → 12 обедов</h3><div class="list">' +
     '<div class="item"><div class="h">0–10 мин</div><div class="m">Духовка на 200. Поставить гречку и рис (две кастрюли или пакетики).</div></div>' +
@@ -1080,6 +1225,25 @@ document.addEventListener('click', function (e) {
       S.targets = calcTargets(S.profile);
       save(); render();
     }
+    return;
+  }
+  if (act === 'shop') {
+    const wk = weekKey();
+    if (S.shop.week !== wk) S.shop = { week: wk, items: {} };
+    const id = el.dataset.id;
+    S.shop.items[id] = !S.shop.items[id];
+    save(); render(); return;
+  }
+  if (act === 'shopclear') {
+    S.shop = { week: weekKey(), items: {} };
+    save(); render(); return;
+  }
+  if (act === 'shopcopy') {
+    const text = shopText();
+    const done = function () { alert('Список скопирован. Вставь в заметки или отправь себе в мессенджер.'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { shopCopyFallback(text, done); });
+    } else { shopCopyFallback(text, done); }
     return;
   }
   if (act === 'timer') { toggleTimer(); return; }
