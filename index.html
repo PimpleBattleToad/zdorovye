@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#0d1014"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>Здоровье · план и дневник</title>
+<link rel="manifest" href="manifest.json"/>
+<link rel="icon" href="icon.svg" type="image/svg+xml"/>
+<style>
+:root{
+  --bg:#0d1014; --card:#151a21; --card2:#1b222b; --line:#252e3a;
+  --text:#e9eef5; --muted:#8b98a8; --dim:#64707f;
+  --green:#34d399; --green-d:#0f3d31; --blue:#60a5fa; --amber:#fbbf24; --red:#f87171; --red-d:#3d1618;
+  --r:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--text);
+  font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  padding-bottom:84px;
+}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px}
+.brand{font-weight:700;font-size:18px;letter-spacing:-.2px}
+.brand span{display:block;font-weight:400;font-size:11px;color:var(--dim);letter-spacing:.4px;text-transform:uppercase}
+.daynum{font-size:12px;color:var(--muted);background:var(--card);border:1px solid var(--line);padding:5px 10px;border-radius:999px}
+main{max-width:760px;margin:0 auto;padding:4px 14px 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:10px 0}
+.card h3{margin:0 0 10px;font-size:13px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.card h2{margin:0 0 8px;font-size:17px}
+.muted{color:var(--muted)}
+.dim{color:var(--dim)}
+.small{font-size:13px}
+.tiny{font-size:11.5px;line-height:1.45}
+.row{display:flex;align-items:center;gap:10px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--card2);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font-size:19px;line-height:1.2}
+.stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+label.f{display:block;font-size:11.5px;color:var(--muted);margin:0 0 4px;text-transform:uppercase;letter-spacing:.5px}
+input[type=number],input[type=text],input[type=date],textarea,select{
+  width:100%;background:var(--card2);border:1px solid var(--line);color:var(--text);
+  border-radius:10px;padding:10px 12px;font:inherit;font-size:15px;outline:none
+}
+input:focus,textarea:focus{border-color:var(--green)}
+textarea{resize:vertical;min-height:70px}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  background:var(--card2);border:1px solid var(--line);color:var(--text);
+  border-radius:11px;padding:10px 14px;font:inherit;font-size:14px;font-weight:600;cursor:pointer
+}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--green);border-color:var(--green);color:#062b22}
+.btn.ghost{background:transparent}
+.btn.sm{padding:7px 11px;font-size:13px;border-radius:9px}
+.btn.wide{width:100%}
+.pill{display:inline-block;font-size:11px;padding:3px 8px;border-radius:999px;background:var(--card2);color:var(--muted);border:1px solid var(--line)}
+.pill.green{background:var(--green-d);color:var(--green);border-color:#1b5e4a}
+.pill.red{background:var(--red-d);color:var(--red);border-color:#5e2327}
+.pill.amber{background:#3a2c0d;color:var(--amber);border-color:#5c4611}
+.bar{height:9px;background:var(--card2);border-radius:999px;overflow:hidden;margin:7px 0 4px}
+.bar i{display:block;height:100%;background:var(--green);border-radius:999px;transition:width .25s}
+.bar.b i{background:var(--blue)}
+.checks{display:flex;flex-direction:column;gap:8px}
+.check{display:flex;align-items:flex-start;gap:10px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer}
+.check.on{border-color:#1b5e4a;background:#10241f}
+.check .box{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--dim);flex:0 0 auto;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#062b22}
+.check.on .box{background:var(--green);border-color:var(--green)}
+.check .t{font-size:14.5px}
+.check .s{font-size:12px;color:var(--muted)}
+.cups{display:grid;grid-template-columns:repeat(12,1fr);gap:5px;margin:8px 0 4px}
+.cup{aspect-ratio:1;border-radius:5px;border:1px solid var(--line);background:var(--card2);cursor:pointer;padding:0}
+.cup.on{background:var(--blue);border-color:var(--blue)}
+.seg{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;background:var(--card2);border:1px solid var(--line);padding:4px;border-radius:12px}
+.seg button{flex:1 1 0;min-width:0;background:transparent;border:0;color:var(--muted);font:inherit;font-size:12.5px;font-weight:600;line-height:1.2;padding:7px 6px;border-radius:9px;cursor:pointer;text-align:center}
+.seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 0 rgba(0,0,0,.3)}
+.alert{border-radius:12px;padding:11px 13px;font-size:13.5px;margin:10px 0;border:1px solid}
+.alert.red{background:var(--red-d);border-color:#5e2327;color:#ffd9d9}
+.alert.amber{background:#33280c;border-color:#5c4611;color:#ffe9b0}
+.alert.green{background:#0f2a22;border-color:#1b5e4a;color:#c7f5e6}
+.alert b{color:#fff}
+.list{display:flex;flex-direction:column;gap:9px}
+.item{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.item .h{font-size:14.5px;font-weight:600}
+.item .m{font-size:12.5px;color:var(--muted);margin-top:2px}
+.ex{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}
+.ex:last-child{border-bottom:0}
+.ex .n{flex:1}
+.ex .t{font-size:14.5px}
+.ex .s{font-size:12px;color:var(--dim)}
+.ex .d{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--dim);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:12px;color:#062b22;cursor:pointer;margin-top:2px}
+.ex.on .d{background:var(--green);border-color:var(--green)}
+.ex.on .t{color:var(--muted);text-decoration:line-through}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--dim);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px;padding:6px 6px;border-bottom:1px solid var(--line)}
+td{padding:7px 6px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+.chart{width:100%;height:200px;display:block}
+.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:20;
+  display:grid;grid-template-columns:repeat(6,1fr);
+  background:rgba(15,19,24,.96);backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+}
+.tab{background:none;border:0;color:var(--dim);font:inherit;font-size:10px;padding:6px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tab i{font-style:normal;font-size:17px;line-height:1}
+.tab.on{color:var(--green)}
+.hr{height:1px;background:var(--line);margin:12px 0}
+.kbd{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:var(--card2);padding:1px 5px;border-radius:5px;color:var(--muted)}
+.slider{width:100%;accent-color:var(--green)}
+.painval{font-size:26px;font-weight:700;min-width:34px;text-align:right}
+details{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0}
+summary{cursor:pointer;font-size:14px;font-weight:600;color:var(--text)}
+details p,details ul{font-size:13.5px;color:var(--muted)}
+.timer{font:700 34px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:1px}
+@media(min-width:720px){
+  .tabs{max-width:760px;margin:0 auto;border-radius:16px 16px 0 0;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">Здоровье<span>план · дневник · 100 → 75</span></div>
+  <div class="daynum" id="daynum"></div>
+</header>
+<main id="main"></main>
+<nav class="tabs" id="tabs">
+  <button class="tab" data-act="tab" data-tab="today"><i>☀️</i>Сегодня</button>
+  <button class="tab" data-act="tab" data-tab="workout"><i>🏋️</i>Тренировка</button>
+  <button class="tab" data-act="tab" data-tab="food"><i>🍽️</i>Питание</button>
+  <button class="tab" data-act="tab" data-tab="diary"><i>📓</i>Дневник</button>
+  <button class="tab" data-act="tab" data-tab="progress"><i>📈</i>Прогресс</button>
+  <button class="tab" data-act="tab" data-tab="plan"><i>📋</i>План</button>
+</nav>
+
+<script>
+'use strict';
+
+/* ============ STATE ============ */
+const KEY = 'zdorovye.v1';
+const pad = n => String(n).padStart(2, '0');
+const dkey = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const todayKey = () => dkey(new Date());
+const parseKey = k => { const p = k.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const fmtShort = k => parseKey(k).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+const num = v => (v === '' || v === null || v === undefined || isNaN(+v)) ? null : +v;
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const DEFAULT = {
+  profile: { age: 47, height: 170, startWeight: 100, targetWeight: 75, startDate: todayKey() },
+  targets: { kcal: 1900, protein: 150, fat: 60, carbs: 190, water: 12, steps: 6000 },
+  days: {},
+  checkins: []
+};
+
+let S;
+try { S = Object.assign(JSON.parse(JSON.stringify(DEFAULT)), JSON.parse(localStorage.getItem(KEY) || '{}')); }
+catch (e) { S = JSON.parse(JSON.stringify(DEFAULT)); }
+if (!S.days) S.days = {};
+if (!S.checkins) S.checkins = [];
+
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } }
+function day(k) { k = k || todayKey(); if (!S.days[k]) S.days[k] = {}; return S.days[k]; }
+function dayNumber() {
+  const a = parseKey(S.profile.startDate), b = new Date();
+  return Math.floor((b - a) / 86400000) + 1;
+}
+function lastWeight() {
+  const ks = Object.keys(S.days).filter(k => S.days[k].weight).sort();
+  return ks.length ? S.days[ks[ks.length - 1]].weight : null;
+}
+function bmi(w) { return +(w / Math.pow(S.profile.height / 100, 2)).toFixed(1); }
+
+/* ============ CONTENT ============ */
+const SCHEDULE = { 1: 'A', 2: 'cardio', 3: 'B', 4: 'walk', 5: 'cardio', 6: 'mobility', 0: 'rest' };
+const SCHED_LABEL = { A: 'Силовая A — верх + кор', B: 'Силовая B — низ сидя/лёжа', cardio: 'Кардио — эллипс', walk: 'Ходьба 15–20 мин', mobility: 'Мобильность + прогулка', rest: 'Отдых' };
+
+const WARMUP = [
+  ['Шея — наклоны и повороты', '1 мин'],
+  ['Плечи — круги вперёд/назад', '1 мин'],
+  ['Локти и кисти — вращения', '1 мин'],
+  ['Таз — круги с опорой на стул', '1 мин'],
+  ['Колени сидя — разгибание/сгибание', '1,5 мин'],
+  ['Голеностопы — вращения', '1 мин'],
+  ['Эллипс или ходьба на месте', '3–4 мин']
+];
+const EX_A = [
+  ['Жим гантелей лёжа на полу', '2–3 × 10–12', 'локти не разводить широко'],
+  ['Тяга с опорой рукой на стул', '2–3 × 12', 'спина прямая, без глубокого наклона'],
+  ['Жим сидя на стуле со спинкой', '2–3 × 10–12', 'спина прижата к спинке'],
+  ['Отжимания от стола (стоя)', '2–3 × 8–12', 'колени не участвуют'],
+  ['Сгибание рук на бицепс сидя', '2 × 12', ''],
+  ['Вис на турнике', '2 × 10–15 сек', 'ноги слегка на полу, разгрузка спины'],
+  ['Dead bug лёжа', '2 × 8 на сторону', 'поясница прижата к полу']
+];
+const EX_B = [
+  ['Разгибание колена сидя на стуле', '2–3 × 12–15', 'медленно, без веса, без боли'],
+  ['Сгибание колена лёжа (скольжение пяткой)', '2 × 12', 'без усилия'],
+  ['Ягодичный мостик лёжа', '2–3 × 12', 'колени не разводить, без прогиба'],
+  ['Отведение ноги лёжа на боку', '2 × 12 на сторону', ''],
+  ['Подъём на носок сидя', '2 × 15', 'голеностоп, без нагрузки на колено'],
+  ['Планка на стуле (руки на сиденье)', '2 × 15–20 сек', 'корпус прямой, без провисания']
+];
+const MOBILITY = [
+  ['Колени сидя: разгибание до комфорта', '2 мин'],
+  ['Скольжение пяткой лёжа', '2 мин'],
+  ['Наклон к прямой ноге сидя', '2 мин'],
+  ['Растяжка ягодиц лёжа', '2 мин'],
+  ['Кошка-корова на четвереньках', '2 мин'],
+  ['Растяжка спины лёжа (колени в сторону)', '2 мин'],
+  ['Спокойная ходьба', '10 мин']
+];
+const MENUS = [
+  {
+    name: 'Мясо + картошка', kcal: 1815, prot: 153,
+    meals: [
+      ['Завтрак', 'Омлет из 2 яиц + 50 г сыра + хлеб 40 г + кофе с 1 ч.л. сахара', 420, 27],
+      ['Обед', 'Мясо 150 г + картофель 250 г + морковь 100 г + 1 ч.л. масла', 510, 40],
+      ['Перекус', 'Творог 200 г (5%) + чай несладкий', 240, 34],
+      ['Ужин', 'Мясо 180 г + картофель 200 г + овощи 150 г + 1 ч.л. масла', 535, 50],
+      ['Вечер', 'Шоколад 20 г', 110, 2]
+    ]
+  },
+  {
+    name: 'Пельмени / макароны', kcal: 1855, prot: 143,
+    meals: [
+      ['Завтрак', 'Омлет из 2 яиц + 50 г сыра + хлеб 40 г + кофе с 1 ч.л. сахара', 420, 27],
+      ['Обед', 'Макароны 150 г готовых + мясо 120 г + морковь', 520, 35],
+      ['Перекус', 'Творог 200 г (5%) + чай', 240, 34],
+      ['Ужин', 'Пельмени 250 г + мясо 80 г + овощи 150 г + 1 ч.л. масла', 545, 45],
+      ['Вечер', 'Шоколад 20 г', 110, 2]
+    ]
+  },
+  {
+    name: 'Нет времени', kcal: 1720, prot: 144,
+    meals: [
+      ['Завтрак', '2 варёных яйца + 50 г сыра + ломтик хлеба', 390, 25],
+      ['Обед', 'Курица 180 г + гречка 150 г готовой', 520, 45],
+      ['Перекус', 'Тунец в саше 100 г + хлебец', 170, 22],
+      ['Ужин', 'Мясо 180 г + картофель 200 г + овощи', 530, 50],
+      ['Вечер', 'Шоколад 20 г', 110, 2]
+    ]
+  }
+];
+const QUICK = [
+  ['Яйцо', 70, 6], ['Творог 200 г', 240, 34], ['Мясо 150 г', 220, 40],
+  ['Картофель 200 г', 170, 4], ['Хлеб ломтик', 75, 3], ['Шоколад 20 г', 110, 2],
+  ['Пиво 0,5 л', 215, 2], ['Пельмени 250 г', 330, 25]
+];
+const STOP_RULE = 'Остановись немедленно и обратись к врачу, если: боль острая, стреляющая; отек/покраснение/жара в суставе; колено щёлкает с болью; хромота; боль не проходит за 48 ч покоя; боль в покое/ночью.';
+
+/* ============ UI STATE ============ */
+let tab = 'today';
+const ui = { menu: 0, checkin: false };
+
+/* ============ VIEWS ============ */
+function renderToday() {
+  const k = todayKey(), d = day(k);
+  const dn = dayNumber();
+  const w = d.weight != null ? d.weight : (lastWeight() || S.profile.startWeight);
+  const pain = d.pain != null ? +d.pain : null;
+  const T = S.targets;
+  const kcal = d.kcal || 0, prot = d.protein || 0, water = d.water || 0;
+  const wk = SCHEDULE[new Date().getDay()];
+  const wkLabel = SCHED_LABEL[wk];
+  const hour = new Date().getHours();
+  const greet = hour < 11 ? 'Доброе утро' : hour < 18 ? 'Добрый день' : 'Добрый вечер';
+
+  let painBanner = '';
+  if (pain != null && pain >= 6) painBanner = '<div class="alert red"><b>Боль ' + pain + '/10 — стоп.</b><br>Не тренируйся сегодня. Если боль не проходит за 48 ч покоя, есть отёк, хромота или боль ночью — к врачу.</div>';
+  else if (pain != null && pain >= 4) painBanner = '<div class="alert amber"><b>Боль ' + pain + '/10 — снижаем нагрузку.</b><br>Минус 1 подход, минус 5 минут кардио, меньшая амплитуда. Без «потерплю».</div>';
+
+  let html = '';
+  html += '<div class="card"><div class="between"><div><h2 style="margin:0">' + greet + '</h2><div class="muted small">День ' + dn + ' · неделя ' + Math.ceil(dn / 7) + '</div></div>' +
+    '<div class="pill ' + (wk === 'rest' ? '' : 'green') + '">' + wkLabel + '</div></div></div>';
+  html += painBanner;
+
+  /* quick records */
+  html += '<div class="card"><h3>Быстрая запись</h3><div class="grid2">' +
+    '<div><label class="f">Вес, кг</label><input type="number" step="0.1" inputmode="decimal" data-model="weight" value="' + (d.weight != null ? d.weight : '') + '" placeholder="' + w + '"/></div>' +
+    '<div><label class="f">Сон, ч</label><input type="number" step="0.5" inputmode="decimal" data-model="sleep" value="' + (d.sleep != null ? d.sleep : '') + '" placeholder="7"/></div>' +
+    '<div><label class="f">Шаги</label><input type="number" step="100" inputmode="numeric" data-model="steps" value="' + (d.steps != null ? d.steps : '') + '" placeholder="' + T.steps + '"/></div>' +
+    '<div><label class="f">Пиво, л</label><input type="number" step="0.5" inputmode="decimal" data-model="beer" value="' + (d.beer != null ? d.beer : '') + '" placeholder="0"/></div>' +
+    '</div>' +
+    '<div style="margin-top:12px"><div class="between"><label class="f" style="margin:0">Боль в колене</label><div class="painval" id="painval" style="color:' + (pain == null ? 'var(--dim)' : pain >= 6 ? 'var(--red)' : pain >= 4 ? 'var(--amber)' : 'var(--green)') + '">' + (pain == null ? '—' : pain) + '</div></div>' +
+    '<input class="slider" type="range" min="0" max="10" step="1" data-range="pain" value="' + (pain == null ? 0 : pain) + '"/>' +
+    '<div class="between tiny dim"><span>0 — нет</span><span>3 — терпимо</span><span>6 — стоп</span><span>10 — сильно</span></div></div></div>';
+
+  /* water */
+  html += '<div class="card"><div class="between"><h3 style="margin:0">Вода</h3><div class="small muted">' + (water * 0.25).toFixed(2).replace('.', ',') + ' л · цель 2,5–3 л</div></div><div class="cups">';
+  for (let i = 0; i < 12; i++) html += '<button class="cup' + (i < water ? ' on' : '') + '" data-act="cup" data-i="' + i + '" aria-label="стакан ' + (i + 1) + '"></button>';
+  html += '</div><div class="row" style="margin-top:6px"><button class="btn sm ghost" data-act="waterminus">− стакан</button><div class="tiny dim">стакан = 250 мл</div></div></div>';
+
+  /* anchors */
+  const a = d.anchors || {};
+  html += '<div class="card"><h3>Три якоря</h3><div class="checks">';
+  html += anchorRow('water', 'Стакан воды → потом кофе', 'утро, 6:40', a.water);
+  html += anchorRow('walk', 'После обеда — 10 минут ходьбы', '12:40, окно 48 мин', a.walk);
+  html += anchorRow('box', 'Вечером собрал ланч-бокс', '5 минут после ужина', a.box);
+  html += '</div></div>';
+
+  /* nutrition progress */
+  const pk = Math.min(100, Math.round(kcal / T.kcal * 100)), pp = Math.min(100, Math.round(prot / T.protein * 100));
+  html += '<div class="card"><div class="between"><h3 style="margin:0">Питание сегодня</h3><button class="btn sm ghost" data-act="tab" data-tab="food">Добавить</button></div>' +
+    '<div class="between small"><span>Калории</span><span><b>' + Math.round(kcal) + '</b> / ' + T.kcal + '</span></div><div class="bar"><i style="width:' + pk + '%"></i></div>' +
+    '<div class="between small" style="margin-top:8px"><span>Белок</span><span><b>' + Math.round(prot) + '</b> / ' + T.protein + ' г</span></div><div class="bar b"><i style="width:' + pp + '%"></i></div></div>';
+
+  /* workout today */
+  const done = (d.wk && d.wk[wk]) ? true : false;
+  html += '<div class="card"><div class="between"><h3 style="margin:0">Сегодня по плану</h3><button class="btn sm ghost" data-act="tab" data-tab="workout">Открыть</button></div>' +
+    '<div class="row" style="margin-top:4px"><div style="font-size:15px;font-weight:600">' + wkLabel + '</div>' + (done ? '<span class="pill green">готово</span>' : '') + '</div>' +
+    '<div class="tiny muted" style="margin-top:6px">Разминка 8–10 минут обязательна. При боли 4–5 — минус подход, при 6+ — стоп.</div></div>';
+
+  /* checkin due */
+  const last = S.checkins.length ? S.checkins[S.checkins.length - 1].date : null;
+  const daysSince = last ? Math.floor((new Date() - parseKey(last)) / 86400000) : null;
+  if (dn >= 14 && (daysSince == null || daysSince >= 14)) {
+    html += '<div class="alert amber"><b>Пора чек-ин.</b> Прошло ' + (last ? daysSince + ' дн.' : 'больше 2 недель') + '. Заполни короткий отчёт — и посмотрим, что корректировать.<br><button class="btn sm" style="margin-top:8px" data-act="tab" data-tab="diary">Сделать чек-ин</button></div>';
+  }
+  return html;
+}
+
+function anchorRow(k, t, s, on) {
+  return '<div class="check' + (on ? ' on' : '') + '" data-act="anchor" data-k="' + k + '"><div class="box">' + (on ? '✓' : '') + '</div><div><div class="t">' + t + '</div><div class="s">' + s + '</div></div></div>';
+}
+
+function renderWorkout() {
+  const k = todayKey(), d = day(k);
+  const wk = SCHEDULE[new Date().getDay()];
+  const st = d.wk || {};
+  let html = '';
+
+  html += '<div class="card"><h2 style="margin:0 0 4px">Тренировка</h2><div class="muted small">Сегодня: <b style="color:var(--text)">' + SCHED_LABEL[wk] + '</b></div>' +
+    '<div class="tiny dim" style="margin-top:8px">Никакого бега, прыжков, приседаний и выпадов. Всё силовое — сидя или лёжа.</div></div>';
+
+  /* warmup */
+  html += '<div class="card"><h3>Разминка · 8–10 мин · обязательно</h3><div class="checks">';
+  WARMUP.forEach((e, i) => {
+    const on = !!(st.warm || [])[i];
+    html += '<div class="check' + (on ? ' on' : '') + '" data-act="ex" data-g="warm" data-i="' + i + '"><div class="box">' + (on ? '✓' : '') + '</div><div><div class="t">' + e[0] + '</div><div class="s">' + e[1] + '</div></div></div>';
+  });
+  html += '</div></div>';
+
+  html += workoutBlock('A', 'Силовая A — верх + кор', EX_A, st, wk);
+  html += workoutBlock('B', 'Силовая B — низ сидя/лёжа', EX_B, st, wk);
+
+  /* cardio */
+  const cOn = !!st.cardio;
+  html += '<div class="card"><div class="between"><h3 style="margin:0">Кардио · эллипс 15–20 мин</h3>' + (wk === 'cardio' ? '<span class="pill green">сегодня</span>' : '<span class="pill">по плану Вт/Пт</span>') + '</div>' +
+    '<div class="tiny muted" style="margin:6px 0 10px">Сопротивление лёгкое, темп 50–60 шагов/мин, стопа полностью на платформе. Пульс 110–135.</div>' +
+    '<div class="row"><div class="timer" id="timer">00:00</div><button class="btn" data-act="timer" id="timerbtn">Старт</button>' +
+    '<button class="btn ' + (cOn ? 'primary' : 'ghost') + '" data-act="cardiodone">' + (cOn ? '✓ Выполнено' : 'Отметить') + '</button></div></div>';
+
+  /* mobility */
+  html += '<div class="card"><div class="between"><h3 style="margin:0">Мобильность · 20 мин</h3>' + (wk === 'mobility' ? '<span class="pill green">сегодня</span>' : '<span class="pill">по плану Сб</span>') + '</div><div class="checks" style="margin-top:10px">';
+  MOBILITY.forEach((e, i) => {
+    const on = !!(st.mob || [])[i];
+    html += '<div class="check' + (on ? ' on' : '') + '" data-act="ex" data-g="mob" data-i="' + i + '"><div class="box">' + (on ? '✓' : '') + '</div><div><div class="t">' + e[0] + '</div><div class="s">' + e[1] + '</div></div></div>';
+  });
+  html += '</div></div>';
+
+  html += '<div class="card"><h3>Что делать при боли</h3>' +
+    '<div class="list">' +
+    '<div class="item"><div class="h">0–3</div><div class="m">Можно, работаем как есть.</div></div>' +
+    '<div class="item"><div class="h">4–5</div><div class="m">Снижаем объём: минус 1 подход, минус 5 мин кардио, меньшая амплитуда.</div></div>' +
+    '<div class="item"><div class="h">6 и выше</div><div class="m">Стоп. Отдых. К врачу.</div></div>' +
+    '<div class="item"><div class="h">Боль держится &gt;24 ч после</div><div class="m">Следующая тренировка легче на 30%.</div></div>' +
+    '<div class="item"><div class="h">Боль в покое или ночью</div><div class="m">Стоп. К врачу.</div></div>' +
+    '</div></div>';
+
+  html += '<div class="alert red"><b>Стоп-правило.</b><br>' + STOP_RULE + '</div>';
+  return html;
+}
+
+function workoutBlock(id, title, ex, st, wk) {
+  const arr = st[id] || [];
+  const doneN = arr.filter(Boolean).length;
+  let html = '<div class="card"><div class="between"><h3 style="margin:0">' + title + '</h3>' +
+    (wk === id ? '<span class="pill green">сегодня</span>' : '<span class="pill">' + doneN + '/' + ex.length + '</span>') + '</div><div style="margin-top:6px">';
+  ex.forEach((e, i) => {
+    const on = !!arr[i];
+    html += '<div class="ex' + (on ? ' on' : '') + '" data-act="ex" data-g="' + id + '" data-i="' + i + '"><div class="d">' + (on ? '✓' : '') + '</div><div class="n"><div class="t">' + e[0] + '</div><div class="s">' + e[1] + (e[2] ? ' · ' + e[2] : '') + '</div></div></div>';
+  });
+  html += '</div></div>';
+  return html;
+}
+
+function renderFood() {
+  const d = day();
+  const T = S.targets;
+  const kcal = d.kcal || 0, prot = d.protein || 0;
+  const m = MENUS[ui.menu];
+  let html = '';
+
+  html += '<div class="card"><h2 style="margin:0 0 2px">Питание</h2><div class="muted small">Рамка: ' + T.kcal + ' ккал · Б ' + T.protein + ' · Ж ' + T.fat + ' · У ' + T.carbs + '</div>' +
+    '<div class="grid3" style="margin-top:12px"><div class="stat"><b>' + Math.round(kcal) + '</b><span>ккал</span></div><div class="stat"><b>' + Math.round(prot) + '</b><span>белок, г</span></div><div class="stat"><b>' + Math.max(0, T.kcal - Math.round(kcal)) + '</b><span>осталось</span></div></div>' +
+    '<div class="bar" style="margin-top:12px"><i style="width:' + Math.min(100, kcal / T.kcal * 100) + '%"></i></div>' +
+    '<div class="bar b"><i style="width:' + Math.min(100, prot / T.protein * 100) + '%"></i></div>' +
+    '<div class="tiny dim" style="margin-top:6px">Записывай примерно — точность до 100 ккал достаточна.</div></div>';
+
+  html += '<div class="card"><h3>Быстро добавить</h3><div class="grid2">';
+  QUICK.forEach((q, i) => {
+    html += '<button class="btn sm" style="justify-content:space-between" data-act="quick" data-i="' + i + '"><span>' + q[0] + '</span><span class="dim">' + q[1] + '</span></button>';
+  });
+  html += '</div><div class="row" style="margin-top:8px"><button class="btn sm ghost" data-act="resetmacros">Сбросить день</button></div></div>';
+
+  html += '<div class="card"><h3>Меню на день</h3><div class="seg" style="margin-bottom:10px">';
+  MENUS.forEach((mm, i) => { html += '<button class="' + (i === ui.menu ? 'on' : '') + '" data-act="menu" data-i="' + i + '">' + mm.name + '</button>'; });
+  html += '</div>';
+  m.meals.forEach(meal => {
+    html += '<div class="item" style="margin-bottom:8px"><div class="between"><div class="h">' + meal[0] + '</div><div class="tiny dim">' + meal[2] + ' ккал · Б ' + meal[3] + '</div></div><div class="m">' + meal[1] + '</div></div>';
+  });
+  html += '<div class="between small" style="margin-top:6px"><span class="muted">Итого</span><span><b>' + m.kcal + '</b> ккал · Б <b>' + m.prot + '</b></span></div></div>';
+
+  html += '<div class="card"><h3>Ланч-бокс: готовим на 2–3 дня</h3><div class="list">' +
+    '<div class="item"><div class="h">Белок</div><div class="m">Запечь 500–700 г мяса/курицы противнем. Порезать на порции 150 г.</div></div>' +
+    '<div class="item"><div class="h">Гарнир</div><div class="m">Картофель отварной или гречка — кастрюля на 3 дня.</div></div>' +
+    '<div class="item"><div class="h">Овощи</div><div class="m">Морковь палочками, огурцы, помидоры — помыть и в контейнер.</div></div>' +
+    '<div class="item"><div class="h">Сборка</div><div class="m">Контейнер = белок + гарнир + овощи. Утром 2 минуты.</div></div>' +
+    '</div><div class="tiny dim" style="margin-top:8px">Бутерброды с колбасой из обеда убираем: 400 ккал и почти нет белка.</div></div>';
+
+  html += '<div class="card"><h3>Офисный ящик</h3><table><tr><th>Что</th><th>Порция</th><th>Зачем</th></tr>' +
+    '<tr><td>Орехи</td><td>30 г</td><td>сытость</td></tr>' +
+    '<tr><td>Протеиновый батончик</td><td>1 шт</td><td>замена шоколадке</td></tr>' +
+    '<tr><td>Тунец в саше</td><td>1 шт</td><td>белок без готовки</td></tr>' +
+    '<tr><td>Хлебцы</td><td>2–3 шт</td><td>к супу</td></tr>' +
+    '<tr><td>Чай, вода</td><td>—</td><td>вода до кофе</td></tr></table>' +
+    '<div class="tiny dim" style="margin-top:8px">В ящике нет печенья и конфет. Не из морализма — просто решение не принимается 20 раз в день.</div></div>';
+
+  html += '<div class="card"><h3>Кафе и корпоратив</h3><ul class="small muted" style="padding-left:18px;margin:0">' +
+    '<li>Сначала белок и овощи, гарнир — потом.</li>' +
+    '<li>Суп — хорошо: объём и мало калорий, но добавь белка.</li>' +
+    '<li>Один десерт, алкоголь считай как еду.</li>' +
+    '<li>Не отрабатывай голодом на следующий день.</li></ul>' +
+    '<div class="alert green" style="margin-bottom:0"><b>Правило одного вечера:</b> одно событие не рушит неделю. Рушит «раз начал — гуляем до понедельника».</div></div>';
+
+  html += '<div class="card"><h3>Пиво по пятницам · красная зона</h3><div class="list">' +
+    '<div class="item"><div class="h">1. Объём</div><div class="m">2–3 л → 1,5–2 л. Между бокалами — вода. Цель на 4 недели, не завтра.</div></div>' +
+    '<div class="item"><div class="h">2. Закуска</div><div class="m">Убрать чипсы и сухарики. Оставить мясо, сыр, рыбу.</div></div>' +
+    '<div class="item"><div class="h">3. День пятницы</div><div class="m">Обед и перекус — с акцентом на белок, гарнир меньше. Не голодать: иначе вечером снесёт.</div></div>' +
+    '</div><div class="tiny dim" style="margin-top:8px">2–3 л пива ≈ 800–1300 ккал. Баню не трогаем. Вода до, во время и после.</div></div>';
+
+  html += '<div class="card"><h3>Сахар в чае</h3><div class="small muted">Сейчас 2 ложки × 2 чашки. 1-я неделя — 1,5 ложки, 3-я — 1. Это ~40 ккал, но важен принцип «постепенно, без ломки».</div></div>';
+  return html;
+}
+
+function renderDiary() {
+  const keys = Object.keys(S.days).filter(k => {
+    const d = S.days[k];
+    return d.weight != null || d.pain != null || d.sleep != null || d.steps != null || d.kcal;
+  }).sort().reverse();
+
+  let html = '<div class="card"><div class="between"><h2 style="margin:0">Дневник</h2><button class="btn sm primary" data-act="checkin">Чек-ин</button></div>' +
+    '<div class="tiny muted" style="margin-top:6px">Вес смотрим средним за неделю, а не по одному дню.</div></div>';
+
+  if (ui.checkin) html += renderCheckinForm();
+
+  html += '<div class="card"><h3>Записи</h3>';
+  if (!keys.length) html += '<div class="muted small">Пока пусто. Начни с «Сегодня» — вес и боль.</div>';
+  else {
+    html += '<table><tr><th>Дата</th><th>Вес</th><th>Боль</th><th>Сон</th><th>Шаги</th><th>ккал</th></tr>';
+    keys.slice(0, 40).forEach(k => {
+      const d = S.days[k];
+      html += '<tr><td>' + fmtShort(k) + '</td><td>' + (d.weight != null ? d.weight : '—') + '</td><td' + (d.pain >= 6 ? ' style="color:var(--red)"' : d.pain >= 4 ? ' style="color:var(--amber)"' : '') + '>' + (d.pain != null ? d.pain : '—') + '</td><td>' + (d.sleep != null ? d.sleep : '—') + '</td><td>' + (d.steps != null ? d.steps : '—') + '</td><td>' + (d.kcal ? Math.round(d.kcal) : '—') + '</td></tr>';
+    });
+    html += '</table>';
+  }
+  html += '</div>';
+
+  if (S.checkins.length) {
+    html += '<div class="card"><h3>Чек-ины</h3><div class="list">';
+    S.checkins.slice().reverse().forEach(c => {
+      html += '<div class="item"><div class="between"><div class="h">' + fmtShort(c.date) + '</div><div class="tiny dim">вес ' + (c.weight || '—') + ' · боль ' + (c.pain != null ? c.pain : '—') + '</div></div>' +
+        (c.good ? '<div class="m">Получилось: ' + esc(c.good) + '</div>' : '') +
+        (c.bad ? '<div class="m">Не получилось: ' + esc(c.bad) + '</div>' : '') + '</div>';
+    });
+    html += '</div></div>';
+  }
+
+  html += '<div class="card"><h3>Данные и синхронизация</h3><div class="grid2">' +
+    '<button class="btn" data-act="export">Экспорт</button>' +
+    '<button class="btn" data-act="import">Импорт файла</button>' +
+    '</div><div class="tiny dim" style="margin-top:8px">Экспорт — JSON-бэкап, раз в месяц. Импорт принимает и бэкап, и CSV из часов/весов.</div>' +
+    '<div class="row" style="margin-top:10px"><button class="btn sm ghost" data-act="pull">Подтянуть data.json</button></div>' +
+    '<details style="margin-top:10px"><summary>Формат CSV</summary>' +
+    '<div class="tiny muted" style="margin-top:6px">Первая строка — заголовки, разделитель <b>;</b> или <b>,</b>. Десятичная запятая допустима.<br>' +
+    '<code class="kbd" style="display:block;margin-top:8px;white-space:pre-wrap">date;weight;steps;sleep;kcal;protein;water;beer;pain\n2026-11-23;98,4;6200;7;1870;152;11;0;2</code>' +
+    'Обязательна только дата. Остальные колонки — любые из списка: вес, шаги, сон (ч или мин), ккал, белок, вода (л), пиво (л), боль 0–10.</div></details>' +
+    '<div class="hr"></div><button class="btn ghost" data-act="reset" style="color:var(--red)">Сбросить все данные</button></div>';
+
+  return html;
+}
+
+function renderCheckinForm() {
+  const d = day();
+  return '<div class="card"><h3>Чек-ин за 2 недели</h3>' +
+    '<div class="grid2"><div><label class="f">Вес, кг</label><input type="number" step="0.1" data-ci="weight" value="' + (d.weight != null ? d.weight : (lastWeight() || '')) + '"/></div>' +
+    '<div><label class="f">Боль 0–10</label><input type="number" step="1" data-ci="pain" value="' + (d.pain != null ? d.pain : '') + '"/></div></div>' +
+    '<div style="margin-top:10px"><label class="f">Что получилось</label><textarea data-ci="good" placeholder="Например: завтраки 7/7, шаги 4000"></textarea></div>' +
+    '<div style="margin-top:10px"><label class="f">Что не получилось</label><textarea data-ci="bad" placeholder="Например: пиво 3 л, два пропуска тренировок"></textarea></div>' +
+    '<div class="row" style="margin-top:10px"><button class="btn primary" data-act="checkinsave">Сохранить</button><button class="btn ghost" data-act="checkincancel">Отмена</button></div></div>';
+}
+
+function renderProgress() {
+  const w = lastWeight() || S.profile.startWeight;
+  const start = S.profile.startWeight, target = S.profile.targetWeight;
+  const lost = Math.round((start - w) * 10) / 10;
+  const left = Math.max(0, Math.round((w - target) * 10) / 10);
+  const dn = dayNumber();
+  const rate = dn > 1 ? Math.round((lost / Math.max(1, dn - 1)) * 7 * 100) / 100 : 0;
+  /* «−0.0» не показываем: без изменений — просто ноль */
+  const lostTxt = Math.abs(lost) < 0.05 ? '0,0' : (lost > 0 ? '−' + Math.abs(lost).toFixed(1).replace('.', ',') : '+' + Math.abs(lost).toFixed(1).replace('.', ','));
+  const leftTxt = left.toFixed(1).replace('.', ',');
+  const rateTxt = Math.abs(rate) < 0.005 ? '0,00' : rate.toFixed(2).replace('.', ',');
+
+  let html = '<div class="card"><h2 style="margin:0 0 10px">Прогресс</h2>' +
+    '<div class="grid2">' +
+    '<div class="stat"><b>' + w.toFixed(1).replace('.', ',') + '</b><span>текущий вес</span></div>' +
+    '<div class="stat"><b>' + lostTxt + '</b><span>сброшено, кг</span></div>' +
+    '<div class="stat"><b>' + leftTxt + '</b><span>до цели, кг</span></div>' +
+    '<div class="stat"><b>' + rateTxt + '</b><span>кг/нед</span></div>' +
+    '</div>' +
+    '<div class="grid3" style="margin-top:10px">' +
+    '<div class="stat"><b>' + bmi(w).toFixed(1).replace('.', ',') + '</b><span>ИМТ</span></div>' +
+    '<div class="stat"><b>' + dn + '</b><span>день плана</span></div>' +
+    '<div class="stat"><b>' + Math.ceil(left / 0.55) + '</b><span>недель (прогноз)</span></div>' +
+    '</div></div>';
+
+  html += '<div class="card"><h3>Вес</h3><canvas class="chart" id="wchart"></canvas>' +
+    '<div class="tiny dim" style="margin-top:6px">Линия — вес, толстая — среднее за 7 дней, пунктир — цель ' + target + ' кг.</div></div>';
+
+  html += '<div class="card"><h3>Боль в колене · 30 дней</h3><canvas class="chart" id="pchart" style="height:150px"></canvas>' +
+    '<div class="tiny dim" style="margin-top:6px">Зелёный 0–3, жёлтый 4–5, красный 6+. Красные столбики — повод к врачу.</div></div>';
+
+  /* milestones */
+  const ms = [[2, 1.5], [4, 2.5], [8, 5], [12, 7.5]];
+  html += '<div class="card"><h3>Контрольные точки</h3><table><tr><th>Неделя</th><th>План</th><th>Факт</th></tr>';
+  ms.forEach(m => {
+    const dt = addDays(parseKey(S.profile.startDate), m[0] * 7);
+    const past = dt <= new Date();
+    html += '<tr><td>' + m[0] + '</td><td>−' + m[1] + ' кг</td><td>' + (past ? (lost >= m[1] * 0.6 ? '<span style="color:var(--green)">' + lost.toFixed(1) + ' кг</span>' : '<span style="color:var(--amber)">' + lost.toFixed(1) + ' кг</span>') : '<span class="dim">—</span>') + '</td></tr>';
+  });
+  html += '</table><div class="tiny dim" style="margin-top:8px">Отставание — не провал. Смотрим дневник, а не режем калории.</div></div>';
+
+  html += '<div class="card"><h3>Если вес встал</h3><div class="list">' +
+    '<div class="item"><div class="h">1. Проверь точность</div><div class="m">Порции, масло, пиво, выходные. 80% «плато» здесь.</div></div>' +
+    '<div class="item"><div class="h">2. Добавь шаги</div><div class="m">+1000 в день — раньше, чем резать еду.</div></div>' +
+    '<div class="item"><div class="h">3. Потом минус 100–150 ккал</div><div class="m">Не больше. Ниже 1500 не опускаемся.</div></div>' +
+    '</div></div>';
+  return html;
+}
+
+function renderPlan() {
+  return '' +
+    '<div class="card"><h2 style="margin:0 0 6px">План</h2><div class="muted small">47 лет · 170 см · 100 кг → 75 кг. Темп 0,5–0,8 кг в неделю.</div>' +
+    '<div class="grid3" style="margin-top:12px"><div class="stat"><b>1900</b><span>ккал</span></div><div class="stat"><b>150</b><span>белок, г</span></div><div class="stat"><b>60 / 190</b><span>жиры / углеводы</span></div></div></div>' +
+
+    '<div class="card"><h3>Правила, которые не обсуждаются</h3><div class="list">' +
+    '<div class="item"><div class="h">Колени</div><div class="m">Нет бега, прыжков, плиометрики, глубоких приседаний, выпадов, бёрпи, скакалки, степ-аэробики, контактного спорта.</div></div>' +
+    '<div class="item"><div class="h">Разрешено</div><div class="m">Плавание, эллипс, велотренажёр с высоким седлом, ходьба по ровному, гребной, силовые сидя/лёжа, верх тела, core лёжа.</div></div>' +
+    '<div class="item"><div class="h">Разминка</div><div class="m">8–10 минут суставной гимнастики перед каждой тренировкой.</div></div>' +
+    '<div class="item"><div class="h">Врач</div><div class="m">До серьёзных нагрузок — ортопед/травматолог. Пока ждёшь — безопасная база. Я не ставлю диагноз и не назначаю лечение.</div></div>' +
+    '</div></div>' +
+
+    '<div class="alert red"><b>Стоп-правило (дословно).</b><br>' + STOP_RULE + '</div>' +
+
+    '<div class="card"><h3>Прогрессия · 4 недели</h3><table><tr><th>Недели</th><th>Силовые</th><th>Кардио</th><th>Шаги</th></tr>' +
+    '<tr><td>1–2</td><td>2 подхода</td><td>15 мин ×2</td><td>3000–4000</td></tr>' +
+    '<tr><td>3–4</td><td>3 подхода</td><td>20 мин ×2</td><td>4000–6000</td></tr>' +
+    '<tr><td>5–8</td><td>+1 повтор / +0,5–1 кг</td><td>20–25 мин ×2</td><td>6000–8000</td></tr></table>' +
+    '<div class="tiny dim" style="margin-top:8px">Одно изменение за неделю. Не «всё больше сразу».</div></div>' +
+
+    '<div class="card"><h3>Офисные микро-привычки</h3><ul class="small muted" style="padding-left:18px;margin:0">' +
+    '<li>Walk-break каждые 60–90 минут — 2–3 минуты.</li>' +
+    '<li>Вода до кофе.</li>' +
+    '<li>Обед вне стола.</li>' +
+    '<li>10 минут ходьбы после обеда.</li>' +
+    '<li>Шаги: 6–8 тыс. — цель к 8-й неделе.</li></ul></div>' +
+
+    '<div class="card"><h3>Сон</h3><div class="small muted">5–7 часов кормят вечерний шоколад. Цель на 4 недели: 7 часов, отбой в 23:00. Будильник «отбой» в 22:30.</div>' +
+    '<div class="alert amber" style="margin-bottom:0"><b>Храп + сонливость днём + 100 кг</b> — стоит исключить апноэ сна (пульсоксиметрия ночью или сомнолог). Если подтвердится — лечение даст больше, чем диета.</div></div>' +
+
+    '<div class="card"><h3>Анализы для разговора с терапевтом</h3><div class="small muted">Глюкоза, HbA1c, липидный профиль, АЛТ/АСТ, креатинин, ТТГ, мочевая кислота, витамин D, ферритин. Один раз сдать — и знаем, где стоим.</div></div>' +
+
+    '<div class="card"><h3>Контрольные точки</h3><table><tr><th>Точка</th><th>Что смотрим</th></tr>' +
+    '<tr><td>2 недели</td><td>вес, боль, шаги, сон</td></tr>' +
+    '<tr><td>4 недели</td><td>−2–3 кг, боль, порции</td></tr>' +
+    '<tr><td>8 недель</td><td>−4–6 кг, объёмы, давление</td></tr>' +
+    '<tr><td>12 недель</td><td>−6–9 кг, фото, пересмотр</td></tr></table></div>' +
+
+    '<div class="card"><h3>Ошибка = данные</h3><div class="small muted">Следующий приём пищи — обычный. Не компенсируем голодом, не отрабатываем кардио, не начинаем «с понедельника».</div></div>' +
+
+    '<div class="card"><h3>Как ломается срыв</h3><div class="list">' +
+    '<div class="item"><div class="h">1. Триггер</div><div class="m">Усталость, пятница, корпоратив, спор с кем-то, пустой холодильник.</div></div>' +
+    '<div class="item"><div class="h">2. Разрешение</div><div class="m">«Я сегодня заслужил», «один раз можно». Одно и то же оправдание годами.</div></div>' +
+    '<div class="item"><div class="h">3. Действие</div><div class="m">Пиво, шоколад, заказ еды. Само по себе — не катастрофа.</div></div>' +
+    '<div class="item"><div class="h">4. Вина</div><div class="m">Вот здесь всё и рушится. Вина включает «всё пропало» — и откат на недели.</div></div>' +
+    '</div><div class="alert green" style="margin-bottom:0"><b>Правило одного вечера:</b> одно событие не рушит неделю. Рушит «раз начал — гуляем до понедельника». Записал в дневник и идёшь дальше.</div></div>' +
+
+    '<div class="card"><h3>Чек-лист недели</h3><div class="small muted">Не 10 из 10, а «больше половины» — уже движение.</div><table><tr><th>Что</th><th>Норма</th></tr>' +
+    '<tr><td>Завтрак не на кофе</td><td>7 / 7</td></tr>' +
+    '<tr><td>Силовые</td><td>2–3</td></tr>' +
+    '<tr><td>Кардио (эллипс/ходьба)</td><td>2</td></tr>' +
+    '<tr><td>Шаги</td><td>6–8 тыс. × 5 дней</td></tr>' +
+    '<tr><td>Вода</td><td>2,5–3 л</td></tr>' +
+    '<tr><td>Сон</td><td>7 ч × 5 ночей</td></tr>' +
+    '<tr><td>Пиво</td><td>≤ 2 л, один день</td></tr></table></div>' +
+
+    '<div class="card"><h3>Вода и клетчатка</h3><div class="small muted">Вода 2,5–3 л (12 стаканов) — сытость и колени (отёк меньше при нормальном питье). Клетчатка 25–30 г: овощи 400–500 г в день, крупы, бобовые, яблоко. Без клетчатки дефицит переносится тяжело.</div></div>' +
+
+    '<div class="card"><h3>Когда дойдём до 75</h3><div class="small muted">Не «отпуск от плана». Калории поднимаем на 200–300 в неделю до поддержки (~2500), белок оставляем 150 г, силовые — 2–3 в неделю. Цель после — не цифра, а ходить легко и без боли.</div></div>';
+}
+
+const VIEWS = { today: renderToday, workout: renderWorkout, food: renderFood, diary: renderDiary, progress: renderProgress, plan: renderPlan };
+
+/* ============ RENDER ============ */
+function render() {
+  document.getElementById('main').innerHTML = VIEWS[tab]();
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  const dn = dayNumber();
+  document.getElementById('daynum').textContent = dn > 0 ? 'день ' + dn : '';
+  if (tab === 'progress') requestAnimationFrame(drawCharts);
+}
+
+/* ============ ИМПОРТ: CSV / JSON ============ */
+const FIELD_ALIASES = {
+  date: ['date', 'дата', 'day', 'день', 'datetime', 'timestamp', 'start time', 'start', 'starttime', 'date time', 'time'],
+  weight: ['weight kg', 'weight', 'вес кг', 'вес', 'масса', 'weightkg'],
+  steps: ['step count', 'steps', 'шаги', 'шагов', 'stepcount'],
+  sleep: ['sleep hours', 'sleep h', 'sleep', 'сон ч', 'сон'],
+  kcal: ['active calories', 'calories', 'kcal', 'калории', 'ккал', 'энергия'],
+  protein: ['protein g', 'protein', 'белок', 'белки'],
+  water: ['water l', 'water', 'вода л', 'вода', 'hydration'],
+  beer: ['beer', 'пиво'],
+  pain: ['pain', 'боль']
+};
+
+function normLabel(s) {
+  return String(s == null ? '' : s).toLowerCase()
+    .replace(/[()\[\]{}]/g, ' ').replace(/[._]/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+
+function mapHeader(h) {
+  const n = normLabel(h);
+  if (!n) return null;
+  let best = null, bestScore = -1;
+  for (const field in FIELD_ALIASES) {
+    FIELD_ALIASES[field].forEach(alias => {
+      let sc = -1;
+      if (n === alias) sc = 1000 + alias.length;
+      else if ((' ' + n + ' ').indexOf(' ' + alias + ' ') >= 0) sc = 500 + alias.length;
+      else if (alias.length >= 5 && (' ' + n + ' ').indexOf(' ' + alias) >= 0) sc = alias.length;
+      if (sc > bestScore) { bestScore = sc; best = field; }
+    });
+  }
+  return bestScore > 0 ? best : null;
+}
+
+function parseDateCell(v) {
+  const s = String(v == null ? '' : v).trim();
+  if (!s) return null;
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return m[1] + '-' + pad(+m[2]) + '-' + pad(+m[3]);
+  m = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);
+  if (m) {
+    const a = +m[1], b = +m[2], y = m[3];
+    if (a > 12 && b <= 12) return y + '-' + pad(b) + '-' + pad(a);
+    if (b > 12 && a <= 12) return y + '-' + pad(a) + '-' + pad(b);
+    return y + '-' + pad(b) + '-' + pad(a); /* русский формат дд.мм.гггг */
+  }
+  m = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{2})$/);
+  if (m) return '20' + m[3] + '-' + pad(+m[2]) + '-' + pad(+m[1]);
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : dkey(d);
+}
+
+function pnum(v) {
+  if (v == null) return null;
+  const s = String(v).replace(/[\s\u00a0"]/g, '').replace(',', '.');
+  const m = s.match(/-?\d+(\.\d+)?/);
+  return m ? +m[0] : null;
+}
+
+function cleanField(f, v) {
+  if (v == null || isNaN(v)) return null;
+  if (f === 'weight') return (v > 10 && v < 300) ? Math.round(v * 10) / 10 : null;
+  if (f === 'steps') return (v >= 0 && v < 200000) ? Math.round(v) : null;
+  if (f === 'sleep') {
+    const h = v > 24 ? v / 60 : v;
+    return (h > 0 && h <= 16) ? Math.round(h * 2) / 2 : null;
+  }
+  if (f === 'kcal') return (v > 0 && v < 6000) ? Math.round(v) : null;
+  if (f === 'protein') return (v > 0 && v < 400) ? Math.round(v) : null;
+  if (f === 'water') {
+    const cups = v <= 6 ? Math.round(v * 4) : Math.round(v);
+    return (cups > 0 && cups <= 30) ? cups : null;
+  }
+  if (f === 'beer') return (v >= 0 && v <= 20) ? v : null;
+  if (f === 'pain') return (v >= 0 && v <= 10) ? Math.round(v) : null;
+  return null;
+}
+
+function splitLine(line, sep) {
+  const out = []; let cur = '', q = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (q) {
+      if (c === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else q = false; }
+      else cur += c;
+    } else if (c === '"') q = true;
+    else if (c === sep) { out.push(cur); cur = ''; }
+    else cur += c;
+  }
+  out.push(cur);
+  return out;
+}
+
+function parseTable(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (!lines.length) return null;
+  const head = lines[0];
+  const sc = [[';', (head.match(/;/g) || []).length], [',', (head.match(/,/g) || []).length], ['\t', (head.match(/\t/g) || []).length]];
+  sc.sort((a, b) => b[1] - a[1]);
+  const sep = sc[0][1] ? sc[0][0] : ';';
+  const rows = lines.map(l => splitLine(l, sep));
+  return { header: rows[0], rows: rows.slice(1) };
+}
+
+function recordsFromText(text) {
+  const t = String(text == null ? '' : text).replace(/^\uFEFF/, '').trim();
+  if (!t) return { error: 'файл пустой' };
+  if (t[0] === '{' || t[0] === '[') {
+    let j;
+    try { j = JSON.parse(t); } catch (e) { return { error: 'JSON не читается' }; }
+    if (Array.isArray(j)) return { records: j.map(normRecord).filter(Boolean) };
+    if (Array.isArray(j.records)) return { records: j.records.map(normRecord).filter(Boolean) };
+    if (j.days && typeof j.days === 'object') return { backup: j };
+    return { error: 'незнакомый JSON' };
+  }
+  const tbl = parseTable(t);
+  if (!tbl || !tbl.header.length) return { error: 'таблица пустая' };
+  const map = tbl.header.map(mapHeader);
+  const dateIdx = map.indexOf('date');
+  if (dateIdx < 0) return { error: 'нет колонки с датой' };
+
+  /* Файл от весов: «water» там — вода в организме, «calories» — базовый обмен.
+     В дневник еды и стаканов эти колонки писать нельзя. */
+  const hv = tbl.header.join('|');
+  const bodyComp = map.indexOf('weight') >= 0 && /fat|жир|muscle|мышц|visceral|lbm|bone|костн|body ?water/i.test(hv);
+
+  /* Длинный формат (Health Connect, выгрузки «показатель → значение») */
+  const metricIdx = tbl.header.findIndex(h => /^(metric|type|тип|показатель|record ?type|data ?type|категория)$/i.test(String(h).trim()));
+  const valueIdx = tbl.header.findIndex(h => /^(value|значение|val|количество)$/i.test(String(h).trim()));
+
+  const records = [];
+  if (metricIdx >= 0 && valueIdx >= 0) {
+    const byDate = {};
+    tbl.rows.forEach(row => {
+      const k = parseDateCell(row[dateIdx]);
+      if (!k) return;
+      const f = mapHeader(String(row[metricIdx] || ''));
+      if (!f || f === 'date') return;
+      if (bodyComp && (f === 'water' || f === 'kcal')) return;
+      const v = cleanField(f, pnum(row[valueIdx]));
+      if (v == null) return;
+      const rec = byDate[k] || (byDate[k] = { date: k });
+      /* шаги, еда и вода в длинном формате приходят кусками за день */
+      if ((f === 'steps' || f === 'kcal' || f === 'water') && rec[f] != null) rec[f] += v;
+      else rec[f] = v;
+    });
+    Object.keys(byDate).forEach(k => records.push(byDate[k]));
+    return { records: records, long: true, bodyComp: bodyComp };
+  }
+
+  tbl.rows.forEach(row => {
+    const k = parseDateCell(row[dateIdx]);
+    if (!k) return;
+    const rec = { date: k };
+    map.forEach((f, i) => {
+      if (!f || f === 'date') return;
+      if (bodyComp && (f === 'water' || f === 'kcal')) return;
+      const v = cleanField(f, pnum(row[i]));
+      if (v != null) rec[f] = v;
+    });
+    if (Object.keys(rec).length > 1) records.push(rec);
+  });
+  return { records: records, bodyComp: bodyComp };
+}
+
+/* JSON-запись с любыми именами полей приводим к нашим */
+function normRecord(o) {
+  if (!o || typeof o !== 'object') return null;
+  const rec = {};
+  Object.keys(o).forEach(key => {
+    const f = mapHeader(key);
+    if (f === 'date') { const k = parseDateCell(o[key]); if (k) rec.date = k; return; }
+    if (!f) return;
+    const v = cleanField(f, pnum(o[key]));
+    if (v != null) rec[f] = v;
+  });
+  return rec.date && Object.keys(rec).length > 1 ? rec : null;
+}
+
+function mergeRecords(records) {
+  let days = 0, fields = 0;
+  (records || []).forEach(rec => {
+    if (!rec || !rec.date) return;
+    const d = day(rec.date);
+    let f = 0;
+    Object.keys(rec).forEach(key => {
+      if (key === 'date') return;
+      const v = rec[key];
+      if (v == null || d[key] === v) return;
+      d[key] = v; f++;
+    });
+    if (f) { days++; fields += f; }
+  });
+  return { days: days, fields: fields };
+}
+
+function mergeBackup(j) {
+  let days = 0, fields = 0;
+  Object.keys(j.days || {}).forEach(k => {
+    const rec = Object.assign({ date: k }, j.days[k], { date: k });
+    const r = mergeRecords([rec]);
+    days += r.days; fields += r.fields;
+  });
+  if (Array.isArray(j.checkins)) {
+    j.checkins.forEach(c => {
+      if (c && c.date && !S.checkins.some(x => x.date === c.date)) S.checkins.push(c);
+    });
+  }
+  if (j.profile) Object.assign(S.profile, j.profile);
+  if (j.targets) Object.assign(S.targets, j.targets);
+  save();
+  return { days: days, fields: fields };
+}
+
+function runImport(text) {
+  const res = recordsFromText(text);
+  if (res.error) {
+    alert('Не получилось: ' + res.error + '.\n\nНужен CSV с колонкой даты (дата/date) и любыми из: вес, шаги, сон, ккал, белок, вода, пиво, боль. Или JSON-бэкап приложения.');
+    return null;
+  }
+  if (res.backup) {
+    const st = mergeBackup(res.backup);
+    save(); render();
+    alert('Бэкап подхвачен: ' + st.days + ' дн. с данными.');
+    return st;
+  }
+  const st = mergeRecords(res.records);
+  save(); render();
+  const note = res.bodyComp ? '\n\nЭто файл весов: взял из него вес, а состав тела (жир, вода, мышцы) не переношу — в дневнике этих полей нет.' : '';
+  if (!res.records.length) alert('Записей с датой не нашёл. Проверь, что первая строка — заголовки.');
+  else if (!st.days) alert('Все эти даты уже есть — обновлять нечего.' + note);
+  else alert('Импортировано: ' + st.days + ' дн., ' + st.fields + ' значений.' + note);
+  return st;
+}
+
+/* Авто-подхват data.json рядом с приложением (работает на http(s), не на file://) */
+async function pullData(manual) {
+  if (!/^https?:$/.test(location.protocol)) {
+    if (manual) alert('Авто-подхват работает только когда приложение открыто по http(s): localhost или сайт. Через файл — только кнопка «Импорт файла».');
+    return null;
+  }
+  try {
+    const r = await fetch('data.json?_=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) { if (manual) alert('Файла data.json рядом с приложением нет.'); return null; }
+    const j = await r.json();
+    const st = (j && j.days) ? mergeBackup(j) : mergeRecords((j && j.records) || []);
+    save(); render();
+    if (manual || st.days) alert('Подхватил из data.json: ' + st.days + ' дн.');
+    return st;
+  } catch (e) {
+    if (manual) alert('Не смог прочитать data.json: ' + e.message);
+    return null;
+  }
+}
+
+/* ============ ACTIONS ============ */
+document.addEventListener('click', function (e) {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+
+  if (act === 'tab') {
+    tab = el.dataset.tab;
+    window.scrollTo({ top: 0 });
+    render();
+    return;
+  }
+  if (act === 'cup') {
+    const i = +el.dataset.i; const d = day(); const cur = d.water || 0;
+    d.water = (i + 1 === cur) ? i : i + 1;
+    save(); render(); return;
+  }
+  if (act === 'waterminus') {
+    const d = day(); d.water = Math.max(0, (d.water || 0) - 1); save(); render(); return;
+  }
+  if (act === 'anchor') {
+    const d = day(); d.anchors = d.anchors || {};
+    const k = el.dataset.k; d.anchors[k] = !d.anchors[k];
+    save(); render(); return;
+  }
+  if (act === 'ex') {
+    const d = day(); const g = el.dataset.g; const i = +el.dataset.i;
+    d.wk = d.wk || {}; const arr = d.wk[g] || [];
+    while (arr.length <= i) arr.push(false);
+    arr[i] = !arr[i]; d.wk[g] = arr;
+    save(); render(); return;
+  }
+  if (act === 'cardiodone') {
+    const d = day(); d.wk = d.wk || {}; d.wk.cardio = !d.wk.cardio; save(); render(); return;
+  }
+  if (act === 'menu') { ui.menu = +el.dataset.i; render(); return; }
+  if (act === 'quick') {
+    const q = QUICK[+el.dataset.i]; const d = day();
+    d.kcal = Math.round((d.kcal || 0) + q[1]); d.protein = Math.round((d.protein || 0) + q[2]);
+    save(); render(); return;
+  }
+  if (act === 'resetmacros') { const d = day(); d.kcal = 0; d.protein = 0; save(); render(); return; }
+  if (act === 'checkin') { ui.checkin = true; render(); return; }
+  if (act === 'checkincancel') { ui.checkin = false; render(); return; }
+  if (act === 'checkinsave') {
+    const get = n => { const x = document.querySelector('[data-ci="' + n + '"]'); return x ? x.value : ''; };
+    const w = num(get('weight')), p = num(get('pain'));
+    S.checkins.push({ date: todayKey(), weight: w, pain: p, good: get('good'), bad: get('bad') });
+    const d = day();
+    if (w != null) d.weight = w;
+    if (p != null) d.pain = p;
+    ui.checkin = false; save(); render(); return;
+  }
+  if (act === 'export') {
+    const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'zdorovye-' + todayKey() + '.json';
+    a.click(); URL.revokeObjectURL(a.href);
+    return;
+  }
+  if (act === 'import') {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = '.json,.csv,.txt,.tsv,application/json,text/csv,text/plain';
+    inp.onchange = function () {
+      const f = inp.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = function () { runImport(String(r.result || '')); };
+      r.readAsText(f);
+    };
+    inp.click(); return;
+  }
+  if (act === 'pull') { pullData(true); return; }
+  if (act === 'reset') {
+    if (confirm('Удалить все записи? Отменить будет нельзя.')) {
+      localStorage.removeItem(KEY);
+      S = JSON.parse(JSON.stringify(DEFAULT));
+      save(); render();
+    }
+    return;
+  }
+  if (act === 'timer') { toggleTimer(); return; }
+});
+
+/* input handling */
+document.addEventListener('change', function (e) {
+  const el = e.target.closest('[data-model]');
+  if (!el) return;
+  const d = day();
+  const v = num(el.value);
+  d[el.dataset.model] = v;
+  save(); render();
+});
+document.addEventListener('input', function (e) {
+  const el = e.target.closest('[data-range]');
+  if (!el) return;
+  const v = el.value;
+  const out = document.getElementById('painval');
+  if (out) {
+    out.textContent = v;
+    out.style.color = v >= 6 ? 'var(--red)' : v >= 4 ? 'var(--amber)' : 'var(--green)';
+  }
+});
+document.addEventListener('change', function (e) {
+  const el = e.target.closest('[data-range]');
+  if (!el) return;
+  const d = day(); d[el.dataset.range] = +el.value; save(); render();
+});
+
+/* ============ TIMER ============ */
+let timerId = null, tStart = 0, tAcc = 0;
+function fmtT(ms) {
+  const s = Math.floor(ms / 1000);
+  return pad(Math.floor(s / 60)) + ':' + pad(s % 60);
+}
+function toggleTimer() {
+  const btn = document.getElementById('timerbtn');
+  if (timerId) {
+    clearInterval(timerId); timerId = null;
+    tAcc += Date.now() - tStart;
+    if (btn) btn.textContent = 'Старт';
+    return;
+  }
+  tStart = Date.now();
+  if (btn) btn.textContent = 'Пауза';
+  timerId = setInterval(function () {
+    const el = document.getElementById('timer');
+    if (!el) { clearInterval(timerId); timerId = null; return; }
+    el.textContent = fmtT(tAcc + Date.now() - tStart);
+  }, 250);
+}
+
+/* ============ CHARTS ============ */
+function drawCharts() {
+  drawWeightChart();
+  drawPainChart();
+}
+
+function setupCanvas(cv, h) {
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth || 320;
+  cv.width = Math.round(W * dpr);
+  cv.height = Math.round(h * dpr);
+  cv.style.height = h + 'px';
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, h);
+  return { ctx: ctx, W: W, H: h };
+}
+
+function drawWeightChart() {
+  const cv = document.getElementById('wchart'); if (!cv) return;
+  const H = 200;
+  const o = setupCanvas(cv, H), ctx = o.ctx, W = o.W;
+  const ks = Object.keys(S.days).filter(k => S.days[k].weight != null).sort().slice(-60);
+  if (ks.length < 2) {
+    ctx.fillStyle = '#64707f'; ctx.font = '13px -apple-system,Segoe UI,Roboto,sans-serif';
+    ctx.fillText('Нужно хотя бы 2 записи веса', 12, H / 2);
+    return;
+  }
+  const ws = ks.map(k => S.days[k].weight);
+  const target = S.profile.targetWeight;
+  let min = Math.min.apply(null, ws.concat([target]));
+  let max = Math.max.apply(null, ws.concat([target]));
+  if (max - min < 4) { max += 2; min -= 2; }
+  const pl = 36, pr = 12, pt = 14, pb = 24;
+  const x = i => pl + i * (W - pl - pr) / (ks.length - 1);
+  const y = v => pt + (max - v) / (max - min) * (H - pt - pb);
+
+  ctx.font = '10px -apple-system,Segoe UI,Roboto,sans-serif';
+  ctx.fillStyle = '#64707f';
+  for (let i = 0; i <= 3; i++) {
+    const v = min + (max - min) * i / 3;
+    const yy = y(v);
+    ctx.strokeStyle = '#1e2630'; ctx.beginPath(); ctx.moveTo(pl, yy); ctx.lineTo(W - pr, yy); ctx.stroke();
+    ctx.fillText(v.toFixed(0), 4, yy + 3);
+  }
+
+  /* target */
+  ctx.strokeStyle = '#34d399'; ctx.setLineDash([5, 4]); ctx.beginPath();
+  ctx.moveTo(pl, y(target)); ctx.lineTo(W - pr, y(target)); ctx.stroke(); ctx.setLineDash([]);
+
+  /* line */
+  ctx.strokeStyle = '#60a5fa'; ctx.lineWidth = 2; ctx.beginPath();
+  ws.forEach((v, i) => { i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v)); });
+  ctx.stroke();
+
+  /* dots */
+  ctx.fillStyle = '#60a5fa';
+  ws.forEach((v, i) => { ctx.beginPath(); ctx.arc(x(i), y(v), 2.6, 0, 6.3); ctx.fill(); });
+
+  /* moving avg */
+  ctx.strokeStyle = '#34d399'; ctx.lineWidth = 2.4; ctx.beginPath();
+  let started = false;
+  ws.forEach((v, i) => {
+    if (i < 2) return;
+    const seg = ws.slice(Math.max(0, i - 3), i + 4);
+    const avg = seg.reduce((a, b) => a + b, 0) / seg.length;
+    if (!started) { ctx.moveTo(x(i), y(avg)); started = true; } else ctx.lineTo(x(i), y(avg));
+  });
+  ctx.stroke();
+
+  /* labels */
+  ctx.fillStyle = '#8b98a8'; ctx.font = '10px -apple-system,Segoe UI,Roboto,sans-serif';
+  ctx.fillText(fmtShort(ks[0]), pl, H - 6);
+  const lastK = ks[ks.length - 1];
+  const tw = ctx.measureText(fmtShort(lastK)).width;
+  ctx.fillText(fmtShort(lastK), W - pr - tw, H - 6);
+  ctx.fillStyle = '#e9eef5'; ctx.font = 'bold 12px -apple-system,Segoe UI,Roboto,sans-serif';
+  ctx.fillText(ws[ws.length - 1].toFixed(1) + ' кг', W - pr - 48, y(ws[ws.length - 1]) - 8);
+}
+
+function drawPainChart() {
+  const cv = document.getElementById('pchart'); if (!cv) return;
+  const H = 150;
+  const o = setupCanvas(cv, H), ctx = o.ctx, W = o.W;
+  const days = [];
+  for (let i = 29; i >= 0; i--) days.push(dkey(addDays(new Date(), -i)));
+  const vals = days.map(k => (S.days[k] && S.days[k].pain != null) ? S.days[k].pain : null);
+  if (vals.every(v => v == null)) {
+    ctx.fillStyle = '#64707f'; ctx.font = '13px -apple-system,Segoe UI,Roboto,sans-serif';
+    ctx.fillText('Пока нет записей о боли', 12, H / 2); return;
+  }
+  const pl = 24, pr = 8, pt = 10, pb = 18;
+  const bw = (W - pl - pr) / days.length;
+  ctx.strokeStyle = '#1e2630';
+  for (let i = 0; i <= 10; i += 5) {
+    const yy = pt + (1 - i / 10) * (H - pt - pb);
+    ctx.beginPath(); ctx.moveTo(pl, yy); ctx.lineTo(W - pr, yy); ctx.stroke();
+  }
+  vals.forEach((v, i) => {
+    if (v == null) return;
+    const h = (v / 10) * (H - pt - pb);
+    const xx = pl + i * bw + bw * 0.15;
+    ctx.fillStyle = v >= 6 ? '#f87171' : v >= 4 ? '#fbbf24' : '#34d399';
+    ctx.fillRect(xx, H - pb - h, Math.max(2, bw * 0.7), h);
+  });
+  ctx.fillStyle = '#64707f'; ctx.font = '10px -apple-system,Segoe UI,Roboto,sans-serif';
+  ctx.fillText('10', 2, pt + 4);
+  ctx.fillText('0', 2, H - pb);
+  ctx.fillText('30 дней назад', pl, H - 4);
+  const t = 'сегодня', tw = ctx.measureText(t).width;
+  ctx.fillText(t, W - pr - tw, H - 4);
+}
+
+/* ============ INIT ============ */
+render();
+window.addEventListener('resize', function () { if (tab === 'progress') drawCharts(); });
+
+/* тихо подтягиваем data.json, если приложение открыто по http(s) */
+if (/^https?:$/.test(location.protocol)) {
+  window.addEventListener('load', function () { pullData(false); });
+}
+
+/* PWA install */
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function (e) {
+  e.preventDefault(); deferredPrompt = e;
+  if (tab === 'plan') { }
+});
+
+if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { }); });
+}
+</script>
+</body>
+</html>
